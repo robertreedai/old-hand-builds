@@ -125,9 +125,29 @@
     pointer-events: none; transition: opacity .25s; z-index: 80; max-width: 90vw; text-align: center; }
   .toast.show { opacity: 1; }
   .copysrc { position: fixed; left: -9999px; top: 0; width: 600px; background: #fff; color: #111; }
+  .gate { position: fixed; inset: 0; z-index: 100; background: rgba(8,12,18,.88); display: flex; align-items: center; justify-content: center; padding: 1.2rem; }
+  .gate[hidden] { display: none; }
+  .gate .card { background: var(--bg-soft); color: var(--ink); border: 1px solid var(--accent-dim); border-radius: 14px; max-width: 26rem; width: 100%; padding: 1.2rem 1.2rem 1rem; }
+  .gate h2 { margin: 0 0 .7rem; font-size: 1.15rem; }
+  .gate ul { margin: 0 0 1rem; padding-left: 1.1rem; line-height: 1.45; font-size: .95rem; }
+  .gate li { margin: .45rem 0; }
+  .gate button { width: 100%; font-size: 1.05rem; padding: .8rem; background: var(--accent); color: #062a26; font-weight: 700; border: 0; border-radius: 10px; }
+  .gate .terms { display: block; text-align: center; margin-top: .7rem; font-size: .85rem; color: inherit; text-decoration: underline; background: none; border: 0; padding: .3rem; width: auto; font-weight: 400; margin-left: auto; margin-right: auto; }
 </style>
 </head>
 <body>
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle" hidden>
+  <div class="card">
+    <h2 id="gateTitle">Before you start</h2>
+    <ul>
+      <li>Free tool, as-is. Always review your passdown before handing it off.</li>
+      <li>The Safety section is a shift note, not an incident report or OSHA record. Report hazards through your employer.</li>
+      <li>Your notes stay on this phone. Nothing is uploaded.</li>
+    </ul>
+    <button type="button" id="gateOk">Got it</button>
+    <button type="button" class="terms" id="gateTerms">Full terms</button>
+  </div>
+</div>
 <div class="shell">
   <header class="app-head">
     <div class="brand">
@@ -706,6 +726,13 @@
 
   window.HandoffBot = { clean, hardChunks, boxItems, asText, asHTML, exportText, importText, copyRich,
     get setup() { return setup; }, get texts() { return texts; }, get sections() { return pickedSecs(); } };
+
+  // ---------- First-open notice (once per device) ----------
+  const LS_ACK = "handoffbot.ack.v1";
+  let acked = false; try { acked = localStorage.getItem(LS_ACK) === "1"; } catch (_) {}
+  if (!acked) $("#gate").hidden = false;
+  $("#gateOk").addEventListener("click", () => { try { localStorage.setItem(LS_ACK, "1"); } catch (_) {} $("#gate").hidden = true; });
+  $("#gateTerms").addEventListener("click", () => { try { localStorage.setItem(LS_ACK, "1"); } catch (_) {} $("#gate").hidden = true; const a = $("#aboutBox"); a.open = true; a.scrollIntoView({ behavior: "smooth" }); });
 
   // ---------- Boot ----------
   loadAll();
