@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Handoff"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="theme-color" content="#1c2026"><link rel="icon" href="icon-192.png">
+<head><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Handoff"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="icon-192.png">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'" />
+<meta name="referrer" content="no-referrer" />
 <meta name="theme-color" content="#0f1419" />
 <title>Shift Handoff Bot</title>
 <style>
@@ -16,24 +18,25 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
     font-family: var(--font);
     background: radial-gradient(1000px 500px at 0% -10%, #17383a 0%, transparent 55%), radial-gradient(800px 450px at 100% 0%, #1f2a4a 0%, transparent 50%), var(--bg);
     background-attachment: fixed; color: var(--ink); line-height: 1.45; -webkit-font-smoothing: antialiased;
   }
-  .shell { max-width: 1100px; margin: 0 auto; padding: calc(.8rem + env(safe-area-inset-top)) .85rem 3rem; }
+  .shell { max-width: 720px; margin: 0 auto; padding: calc(.8rem + env(safe-area-inset-top)) .85rem calc(3rem + env(safe-area-inset-bottom)); }
   header.app-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .8rem; }
   .brand { display: flex; gap: .7rem; align-items: center; min-width: 0; }
   .logo { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; background: linear-gradient(145deg, var(--accent), #1e6f8c);
     display: grid; place-items: center; color: #06201e; font-weight: 800; font-size: .95rem; box-shadow: 0 0 0 3px var(--accent-glow); }
   h1 { margin: 0; font-size: 1.25rem; letter-spacing: -.02em; }
   .tagline { margin: .05rem 0 0; color: var(--muted); font-size: .8rem; }
-  nav.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; background: var(--bg-elev); border: 1px solid var(--line);
+  nav.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; background: var(--bg-elev); border: 1px solid var(--line);
     border-radius: 12px; padding: .3rem; margin-bottom: .9rem; position: sticky; top: env(safe-area-inset-top); z-index: 20; }
-  nav.tabs button { background: transparent; color: var(--muted); padding: .55rem .4rem; }
-  nav.tabs .n[hidden] { display: none; }
+  nav.tabs button { background: transparent; color: var(--muted); padding: .6rem .4rem; }
   nav.tabs button.on { background: var(--bg-soft); color: var(--accent); }
   nav.tabs .n { display: inline-block; min-width: 1.3rem; font-size: .7rem; padding: .05rem .35rem; border-radius: 999px; background: var(--accent-glow); color: var(--accent); margin-left: .25rem; }
+  nav.tabs .n[hidden] { display: none; }
   .view { display: none; }
   .view.on { display: block; }
   .card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; box-shadow: 0 12px 40px rgba(0,0,0,.3); margin-bottom: 1rem; }
@@ -41,79 +44,87 @@
   label.f { display: block; font-size: .72rem; color: var(--muted); margin: .6rem 0 .2rem; letter-spacing: .03em; }
   input, select, textarea { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--ink);
     padding: .6rem .7rem; font: inherit; font-size: 16px; }
-  textarea { resize: vertical; min-height: 200px; line-height: 1.5; }
+  textarea { resize: vertical; line-height: 1.5; }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-dim); box-shadow: 0 0 0 3px var(--accent-glow); }
-  .meta-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .5rem; }
-  @media (max-width: 560px) { .meta-row { grid-template-columns: 1fr 1fr; } .meta-row .wide { grid-column: 1 / -1; } }
+  .meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 .5rem; }
   .row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .7rem; align-items: center; }
-  button { appearance: none; border: none; border-radius: 10px; font: inherit; font-weight: 600; font-size: .92rem; padding: .65rem .95rem;
-    cursor: pointer; transition: transform .08s ease, background .15s, border-color .15s; color: var(--ink); }
+  button { appearance: none; -webkit-appearance: none; border: none; border-radius: 10px; font: inherit; font-weight: 600; font-size: .92rem; padding: .65rem .95rem;
+    cursor: pointer; transition: transform .08s ease, background .15s, border-color .15s; color: var(--ink); touch-action: manipulation; }
   button:active { transform: scale(.97); }
   .btn-primary { background: var(--accent); color: #06201e; flex: 1 1 auto; }
+  .btn-big { width: 100%; padding: .9rem 1rem; font-size: 1rem; }
   .btn-soft { background: var(--bg-soft); }
   .btn-ghost { background: transparent; border: 1px solid var(--line); }
   .btn-danger { background: transparent; border: 1px solid #5a2a2a; color: var(--red); }
   .hint { color: var(--muted); font-size: .8rem; margin: .5rem 0 0; }
-  .hint code, .help code { font-family: var(--mono); font-size: .85em; background: var(--bg); padding: .05rem .3rem; border-radius: 5px; color: var(--accent); }
   .summary { display: flex; justify-content: space-between; align-items: center; gap: .5rem; font-size: .85rem; color: var(--muted); flex-wrap: wrap; }
   .summary b { color: var(--ink); font-weight: 600; }
-  .linkbtn { background: none; padding: .2rem 0; color: var(--accent); font-size: .82rem; }
-  details.help { margin-top: .7rem; font-size: .82rem; color: var(--muted); }
-  details.help summary { cursor: pointer; color: var(--ink); }
-  .howto { margin: .55rem 0 .1rem; padding: .5rem .65rem; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; background: var(--bg); font-size: .8rem; color: var(--muted); }
-  .howto summary { cursor: pointer; color: var(--ink); font-weight: 600; font-size: .82rem; }
-  .howto p { margin: .3rem 0 0; }
+  .linkbtn { background: none; padding: .2rem 0; color: var(--accent); font-size: .85rem; }
+  .howto { margin: 0 0 1rem; padding: .65rem .8rem; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; background: var(--bg-elev); font-size: .86rem; color: var(--muted); }
   .howto b { color: var(--ink); }
-  .howto .ex { font-family: var(--mono); font-size: .76rem; color: var(--accent); }
-  .switch { display: flex; align-items: center; gap: .5rem; font-size: .88rem; margin-top: .7rem; }
-  .switch input { width: 1.2rem; height: 1.2rem; accent-color: var(--accent); }
+  .howto ol { margin: .25rem 0 0; padding-left: 1.2rem; }
+  .howto li { margin: .1rem 0; }
+  .inapp { margin: 0 0 1rem; padding: .55rem .75rem; border: 1px solid #5a4a1a; border-radius: 10px; background: #1f1a0e; color: var(--yellow); font-size: .8rem; }
+  .inapp[hidden] { display: none; }
+  .switch { display: flex; align-items: center; gap: .6rem; font-size: .92rem; margin-top: .8rem; min-height: 44px; }
+  .switch input { width: 1.35rem; height: 1.35rem; accent-color: var(--accent); flex-shrink: 0; }
 
-  /* Review */
+  /* Section picker */
+  .chips { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+  .chip { position: relative; min-height: 58px; text-align: left; background: var(--bg); border: 1px solid var(--line); border-left: 5px solid var(--c);
+    color: var(--muted); padding: .6rem 2rem .6rem .7rem; font-size: .95rem; line-height: 1.2; display: flex; align-items: center; overflow-wrap: break-word; }
+  .chip::after { content: "+"; position: absolute; right: .6rem; top: 50%; transform: translateY(-50%); width: 1.3rem; height: 1.3rem; border-radius: 999px;
+    display: grid; place-items: center; font-size: .9rem; border: 1px solid var(--line); color: var(--muted); }
+  .chip.on { background: var(--bg-soft); color: var(--ink); border-color: var(--c); box-shadow: 0 0 0 1px var(--c) inset; }
+  .chip.on::after { content: "✓"; background: var(--c); color: #0f1419; border-color: var(--c); font-weight: 800; }
+  .chip .x { position: absolute; top: -8px; right: -6px; width: 24px; height: 24px; border-radius: 999px; background: var(--bg-soft); border: 1px solid var(--line);
+    color: var(--muted); font-size: .75rem; display: grid; place-items: center; line-height: 1; }
+  .addown { display: flex; gap: .4rem; margin-top: .6rem; }
+  .addown input { flex: 1; }
+  .addown button { flex-shrink: 0; }
+
+  /* Passdown (colored sections, v2 look) */
+  .pd-head { font-size: .85rem; color: var(--muted); margin-bottom: .6rem; line-height: 1.55; }
+  .pd-head b { color: var(--ink); }
+  .pd-title { font-weight: 800; color: var(--ink); font-size: .95rem; margin-bottom: .15rem; }
   .grp { border: 1px solid var(--line); border-left: 4px solid var(--c, var(--accent)); border-radius: 12px; padding: .6rem .7rem; margin-bottom: .6rem; background: var(--bg); }
-  .grp.unsorted { border-color: var(--amber); --c: var(--amber); }
-  .grp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .2rem; }
+  .grp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .2rem; gap: .5rem; }
   .grp-title { font-size: .76rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--c, var(--accent)); }
-  .cnt { font-size: .72rem; font-weight: 800; padding: .1rem .45rem; border-radius: 999px; background: var(--bg-soft); }
-  .item { border-top: 1px dashed #223040; padding: .5rem 0; }
-  .item:first-of-type { border-top: none; }
-  .item-top { display: flex; gap: .45rem; align-items: flex-start; }
-  .secbtn { flex-shrink: 0; font-size: .7rem; font-weight: 700; padding: .25rem .5rem; border-radius: 999px; background: var(--bg-soft);
-    color: var(--c, var(--accent)); border: 1px solid var(--line); max-width: 42%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .txt { flex: 1; min-width: 0; outline: none; border-radius: 6px; padding: .1rem .2rem; word-wrap: break-word; font-size: .93rem; }
-  .txt:focus { background: var(--bg-soft); box-shadow: 0 0 0 2px var(--accent-glow); }
-  .acts { display: flex; gap: .35rem; margin-top: .35rem; padding-left: .1rem; }
-  .acts button { font-size: .75rem; padding: .3rem .6rem; background: var(--bg-soft); color: var(--muted); }
-  .acts button.del:hover, .acts button.del:active { color: var(--red); }
-  .splitbox { margin-top: .4rem; padding: .5rem; border: 1px dashed var(--accent-dim); border-radius: 10px; }
-  .splitbox p { margin: 0 0 .35rem; font-size: .78rem; color: var(--muted); }
-  .w { display: inline-block; margin: .12rem; padding: .25rem .45rem; border-radius: 7px; background: var(--bg-soft); font-size: .85rem; cursor: pointer; border: none; font-weight: 500; }
-  .w:first-child { opacity: .45; pointer-events: none; }
-  .add { background: none; color: var(--muted); font-size: .78rem; padding: .3rem 0 .1rem; }
-  .empty { color: #5d6b7d; font-size: .82rem; font-style: italic; padding: .2rem 0; }
-  .empty-state { text-align: center; color: var(--muted); padding: 2rem 1rem; font-size: .9rem; }
-  pre.preview { white-space: pre-wrap; word-wrap: break-word; font-family: var(--mono); font-size: .82rem; background: var(--bg); border: 1px solid var(--line);
-    border-radius: 10px; padding: .8rem; margin: .4rem 0 0; max-height: 60vh; overflow: auto; }
-  .sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; z-index: 60; align-items: flex-end; justify-content: center; }
-  .sheet-bg.on { display: flex; }
-  .sheet { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 16px 16px 0 0; width: 100%; max-width: 560px;
-    padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)); max-height: 80vh; overflow: auto; }
-  @media (min-width: 700px) { .sheet-bg { align-items: center; } .sheet { border-radius: 16px; } }
-  .sheet h3 { margin: 0 0 .6rem; font-size: .95rem; }
-  .sheet .opts { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
-  .sheet .opts button { background: var(--bg-soft); text-align: left; font-size: .85rem; border-left: 4px solid var(--c, var(--accent)); }
-  .sheet .opts button.cur { outline: 2px solid var(--accent-dim); }
+  .cnt { font-size: .72rem; font-weight: 800; padding: .1rem .45rem; border-radius: 999px; background: var(--bg-soft); color: var(--muted); }
+  .grp ul { margin: .15rem 0 0; padding-left: 1.1rem; }
+  .grp li { font-size: .93rem; margin: .15rem 0; word-wrap: break-word; }
+  .grp li.ex, .pd-head .ex { color: #6b7a8e; font-style: italic; }
+  .grp li.none { color: #5d6b7d; font-style: italic; list-style: none; margin-left: -1.1rem; }
+  .pd-note { font-size: .78rem; color: var(--muted); margin: 0 0 .6rem; padding: .4rem .6rem; border: 1px dashed var(--line); border-radius: 8px; }
+  .empty-state { text-align: center; color: var(--muted); padding: 1.2rem 1rem; font-size: .9rem; border: 1px dashed var(--line); border-radius: 12px; }
+
+  /* Review boxes */
+  .box-grp textarea.box { min-height: 96px; margin-top: .35rem; background: var(--bg-elev); border-color: var(--line); overflow: hidden; }
+  .box-grp textarea.box::placeholder { color: #6b7a8e; font-style: italic; opacity: 1; }
+  .box-grp textarea.box:focus::placeholder { color: transparent; }
+  .box-hint { font-size: .76rem; color: var(--muted); margin: .1rem 0 0; }
+  .box-hint b { color: var(--ink); font-weight: 600; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .8rem; }
+  .actions .btn-primary { grid-column: 1 / -1; padding: .9rem; font-size: 1rem; }
+
+  details.share { margin-top: 0; }
+  details.share summary { cursor: pointer; font-weight: 700; color: var(--ink); font-size: .92rem; min-height: 32px; display: flex; align-items: center; list-style: none; }
+  details.share summary::-webkit-details-marker { display: none; }
+  details.share summary::before { content: "▸"; margin-right: .5rem; color: var(--accent); transition: transform .15s; }
+  details.share[open] summary::before { transform: rotate(90deg); }
+  .share-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin-top: .6rem; }
+  .share-grid .wide { grid-column: 1 / -1; }
+  .filebtn { display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--line); padding: .65rem .95rem; border-radius: 10px; font-weight: 600; font-size: .92rem; cursor: pointer; }
+
   footer.note { margin-top: 1rem; color: #5d6b7d; font-size: .72rem; text-align: center; }
+  footer.note details.about { margin-top: .6rem; text-align: left; font-size: .8rem; line-height: 1.45; }
+  footer.note details.about summary { text-align: center; cursor: pointer; text-decoration: underline; padding: .4rem; }
+  footer.note details.about p { margin: .5rem 0; }
   .toast { position: fixed; bottom: calc(1.25rem + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--bg-soft);
     border: 1px solid var(--accent-dim); color: var(--ink); padding: .6rem 1rem; border-radius: 999px; font-size: .85rem; opacity: 0;
     pointer-events: none; transition: opacity .25s; z-index: 80; max-width: 90vw; text-align: center; }
   .toast.show { opacity: 1; }
-  @media print {
-    body { background: #fff !important; color: #000; }
-    .shell > *:not(#vReview), #vReview > *:not(.print-card), .print-card > *:not(pre), .toast, .sheet-bg { display: none !important; }
-    #vReview { display: block !important; }
-    .card { border: none; box-shadow: none; background: #fff; padding: 0; }
-    pre.preview { background: #fff; color: #000; border: none; max-height: none; font-size: 11pt; }
-  }
+  .copysrc { position: fixed; left: -9999px; top: 0; width: 600px; background: #fff; color: #111; }
 </style>
 </head>
 <body>
@@ -123,272 +134,136 @@
       <div class="logo" aria-hidden="true">HB</div>
       <div>
         <h1>Shift Handoff Bot</h1>
-        <p class="tagline">Dictated end-of-shift notes → clean pass-down</p>
+        <p class="tagline">Talk or type your shift notes → clean pass-down</p>
       </div>
     </div>
   </header>
 
   <nav class="tabs" role="tablist">
-    <button type="button" data-tab="vNotes" class="on">1 · Notes</button>
+    <button type="button" data-tab="vSetup" class="on">1 · Setup</button>
     <button type="button" data-tab="vReview">2 · Review<span class="n" id="tabCount" hidden></span></button>
-    <button type="button" data-tab="vSetup">Setup</button>
   </nav>
 
-  <!-- NOTES -->
-  <section class="view on" id="vNotes">
+  <div class="inapp" id="inapp" hidden>You're in an app's built-in browser. Everything works, but your setup may not be remembered here. For best results, open this page in Safari or Chrome (tap ⋯ or the share icon, then "Open in browser").</div>
+
+  <!-- SETUP -->
+  <section class="view on" id="vSetup">
+    <div class="howto">
+      <b>How it works</b>
+      <ol>
+        <li>Pick your sections below, then tap <b>Save setup</b>.</li>
+        <li>On Review, tap each box and talk (tap the <b>mic on your keyboard</b>) or type. Say <b>"next"</b> between items.</li>
+        <li>Copy or share the finished pass-down.</li>
+      </ol>
+    </div>
+
     <div class="card">
-      <div class="summary"><span id="hdrSummary"></span><button type="button" class="linkbtn" data-goto="vSetup">Edit header</button></div>
-      <details class="howto" id="howto" open>
-        <summary>How to dictate</summary>
-        <p>Say <b>"next"</b> between items. Everything between two nexts stays together as one item.</p>
-        <p>Optional: start an item with a section name (like <b>"Dock"</b> or <b>"Safety"</b>) to send it there.</p>
-        <p class="ex">Dock, door 6 leveler stuck, tech on it. Next. Parts, ordered two photo eyes. Next.</p>
-      </details>
-      <label class="f" for="raw">Rough notes (type, paste, or dictate)</label>
-      <textarea id="raw" placeholder="Talk it out and say &quot;next&quot; between items, e.g. Safety, oil leak by door 4, put absorbent down. Next. Parts, need two belts for conveyor 3. Next."></textarea>
-      <div class="row">
-        <button type="button" class="btn-primary" id="btnBuild">Sort into sections →</button>
-        <button type="button" class="btn-ghost" id="btnClear">Clear</button>
+      <h2>Passdown header</h2>
+      <div class="meta-row">
+        <div><label class="f" for="name">Name</label><input type="text" id="name" placeholder="Your name" autocomplete="off" /></div>
+        <div><label class="f" for="title">Title</label><input type="text" id="title" placeholder="e.g. Maint. Lead" autocomplete="off" /></div>
+        <div><label class="f" for="shift">Shift</label><input type="text" id="shift" list="shiftList" placeholder="Day / Night" autocomplete="off" /></div>
+        <div><label class="f" for="date">Date</label><input type="date" id="date" /></div>
       </div>
-      <div class="row" style="margin-top:.4rem">
-        <button type="button" class="btn-soft" id="btnSample">Sample</button>
-        <button type="button" class="btn-soft" id="btnSampleM">Sample (with sections)</button>
+      <datalist id="shiftList"><option value="Day"><option value="Night"><option value="Swing"><option value="1st"><option value="2nd"><option value="3rd"></datalist>
+      <p class="hint">All optional. Remembered on this phone only.</p>
+    </div>
+
+    <div class="card">
+      <h2>Pick your sections</h2>
+      <p class="hint" style="margin:0 0 .6rem">Tap to add or remove. They show up in this order.</p>
+      <div class="chips" id="chips"></div>
+      <div class="addown">
+        <input type="text" id="customName" placeholder="Add your own section" maxlength="40" autocomplete="off" enterkeyhint="done" />
+        <button type="button" class="btn-soft" id="btnAddCustom">Add</button>
       </div>
-      <details class="help">
-        <summary>More dictation tips</summary>
-        <p>Say a <b>section name</b> (or one of its aliases from Setup) to start that section, then talk. Everything after goes there until you say another section name.</p>
-        <p>Say <code>next</code> or <code>new item</code> to start a new item. Everything between two nexts is one item, even if it runs several sentences. Example: <code>Safety oil leak by door 4 next guard missing on the compressor. Tech is on it. Next. Parts need two belts.</code></p>
-        <p>No "next" at all? The bot splits on sentences and guesses the best section from keywords. Each item lands in exactly one section, and you can fix anything in Review.</p>
-        <p>Filler like <code>and then we</code>, <code>um</code>, <code>uh</code>, <code>so yeah</code> is trimmed from the start and end of items.</p>
+      <label class="switch"><input type="checkbox" id="omitEmpty" /> Omit empty sections from the passdown</label>
+    </div>
+
+    <div class="card">
+      <h2>Your passdown will look like this</h2>
+      <div id="tplPreview"></div>
+      <button type="button" class="btn-primary btn-big" id="btnSaveSetup" style="margin-top:.4rem">Save setup →</button>
+    </div>
+
+    <div class="card">
+      <details class="share" id="shareBox">
+        <summary>Share or back up this setup</summary>
+        <p class="hint">Send this setup to a coworker so their phone uses the same sections, or save it for later.</p>
+        <div class="share-grid">
+          <button type="button" class="btn-soft wide" id="btnShareSetup">Send setup…</button>
+          <button type="button" class="btn-soft" id="btnCopySetup">Copy setup code</button>
+          <button type="button" class="btn-soft" id="btnDownloadSetup">Save as file</button>
+        </div>
+        <label class="f" for="ioText">Got a setup from someone? Paste it here:</label>
+        <textarea id="ioText" spellcheck="false" autocapitalize="off" style="min-height:110px;font-family:var(--mono);font-size:14px"></textarea>
+        <div class="share-grid">
+          <button type="button" class="btn-primary" id="btnImport">Use pasted setup</button>
+          <label class="filebtn">Open setup file<input type="file" id="ioFile" accept=".txt,text/plain" hidden /></label>
+        </div>
+        <p class="hint">The setup is just a short text: your header and section names. No notes are included.</p>
       </details>
-      <p class="hint">Runs 100% on this device. Nothing is uploaded. Notes and setup are saved only in this browser.</p>
     </div>
   </section>
 
   <!-- REVIEW -->
   <section class="view" id="vReview">
     <div class="card">
-      <div class="summary"><span id="hdrSummary2"></span><button type="button" class="linkbtn" data-goto="vNotes">← Notes</button></div>
-      <p class="hint" style="margin-top:.3rem">Tap a section tag to move an item. Tap the text to edit it. Split or delete below each item.</p>
-      <div id="review" style="margin-top:.6rem"></div>
+      <div class="summary"><span id="hdrSummary"></span><button type="button" class="linkbtn" data-goto="vSetup">Edit setup</button></div>
+      <p class="hint" style="margin-top:.35rem">Tap a box and talk (mic on your keyboard) or type. Say <b>"next"</b> between items.</p>
+      <div id="boxes" style="margin-top:.7rem"></div>
     </div>
-    <div class="card print-card">
-      <h2>Pass-down preview</h2>
-      <label class="switch"><input type="checkbox" id="omitEmpty2" /> Omit empty sections</label>
-      <pre class="preview" id="preview"></pre>
-      <div class="row">
-        <button type="button" class="btn-primary" id="btnCopy">Copy pass-down</button>
-        <button type="button" class="btn-ghost" id="btnPrint">Print</button>
+    <div class="card">
+      <h2>Passdown preview</h2>
+      <div id="preview"></div>
+      <label class="switch" style="margin-top:.2rem"><input type="checkbox" id="omitEmpty2" /> Omit empty sections</label>
+      <div class="actions">
+        <button type="button" class="btn-primary" id="btnCopy">Copy passdown</button>
+        <button type="button" class="btn-soft" id="btnShare">Share</button>
+        <button type="button" class="btn-danger" id="btnClearAll">Clear all</button>
+        <button type="button" class="btn-ghost" data-goto="vSetup" style="grid-column:1 / -1">Edit setup</button>
       </div>
     </div>
   </section>
 
-  <!-- SETUP -->
-  <section class="view" id="vSetup">
-    <div class="card">
-      <h2>Pass-down header</h2>
-      <div class="meta-row">
-        <div class="wide"><label class="f" for="date">Date (auto-filled today)</label><input type="date" id="date" /></div>
-        <div><label class="f" for="manager">Manager (your name)</label><input type="text" id="manager" placeholder="Name" autocomplete="off" /></div>
-        <div><label class="f" for="shift">Shift</label><input type="text" id="shift" list="shiftList" placeholder="Day / Night" autocomplete="off" /></div>
-      </div>
-      <datalist id="shiftList"><option value="Day"><option value="Night"><option value="Swing"><option value="1st"><option value="2nd"><option value="3rd"></datalist>
-    </div>
-    <div class="card">
-      <h2>Sections</h2>
-      <p class="hint" style="margin-top:0">One section per line, in the order you want them. Optional aliases after a colon (words you might say to start that section). Optional extra keywords after a <code>|</code> help the bot guess when you don't say a section name. Lines starting with <code>#</code> are ignored.</p>
-      <p class="hint">Example: <code>Lifts: lift, elevator | hydraulic, cable</code></p>
-      <textarea id="secText" spellcheck="false" style="min-height:240px;font-family:var(--mono);font-size:14px"></textarea>
-      <label class="f" for="emptyText">Text for empty sections</label>
-      <input type="text" id="emptyText" placeholder="No issues" />
-      <label class="switch"><input type="checkbox" id="omitEmpty" /> Omit empty sections from the pass-down</label>
-      <div class="row">
-        <button type="button" class="btn-primary" id="btnSaveSetup">Save setup</button>
-        <button type="button" class="btn-danger" id="btnResetSetup">Reset to generic sections</button>
-      </div>
-      <p class="hint">Saved only in this browser's local storage. Never uploaded.</p>
-    </div>
-    <div class="card">
-      <h2>Export / import setup</h2>
-      <div class="row" style="margin-top:0">
-        <button type="button" class="btn-soft" id="btnExport">Export as text</button>
-        <button type="button" class="btn-soft" id="btnExportCopy">Copy export</button>
-        <button type="button" class="btn-soft" id="btnExportFile">Download .txt</button>
-      </div>
-      <label class="f" for="ioText">Setup text (paste here, then Import)</label>
-      <textarea id="ioText" spellcheck="false" style="min-height:150px;font-family:var(--mono);font-size:14px"></textarea>
-      <div class="row">
-        <button type="button" class="btn-primary" id="btnImport">Import pasted text</button>
-        <label class="btn-ghost" style="padding:.65rem .95rem;border-radius:10px;font-weight:600;font-size:.92rem;cursor:pointer">Import file<input type="file" id="ioFile" accept=".txt,text/plain" hidden /></label>
-      </div>
-    </div>
-  </section>
-
-  <footer class="note">Keyword parsing, no AI, no server · Always review before handing off</footer>
+  <footer class="note">
+    No AI, no server of its own · Notes stay in this browser · Always review before handing off · Safety notes are not incident or OSHA records
+    <details class="about" id="aboutBox">
+      <summary>About &amp; terms</summary>
+      <p><b>Privacy.</b> Handoff Bot has no accounts, no AI, no analytics, and no server of its own. What you type or dictate is saved only in this browser on this device, and the app does not upload it. Your phone's dictation or keyboard may use its own speech service. Copying or sharing sends your text wherever you choose. Our host, GitHub Pages, logs visitor IP addresses.</p>
+      <p><b>Accuracy.</b> Handoff Bot only puts your words into the sections you choose. It does not check facts, catch mistakes, or understand what you mean. Dictation can mishear you, and "next" can split items in the wrong place. Read the whole passdown and fix it before you hand it off.</p>
+      <p><b>Safety section.</b> The Safety section is just a shift note. It is not an incident report, OSHA record, or compliance record. It does not replace your employer's required safety reporting, lockout/tagout procedures, or recordkeeping. Report hazards, injuries, and near misses right away through your employer's official channels. In an emergency, call for help first.</p>
+      <p><b>Terms.</b> Handoff Bot is free and provided "as is," with no warranties of any kind. To the extent the law allows, Old Hand AI is not liable for any loss from using it. You are responsible for what you enter and share, including your employer's confidential information, and for following your employer's rules on devices and notes. We may change or discontinue the app at any time.</p>
+      <p><i>These notes are general information, not legal advice. If you need legal advice, talk to your own lawyer.</i></p>
+    </details>
+  </footer>
 </div>
 
-<div class="sheet-bg" id="sheet" role="dialog" aria-modal="true" aria-label="Move item">
-  <div class="sheet">
-    <h3>Move to section</h3>
-    <div class="opts" id="sheetOpts"></div>
-    <div class="row"><button type="button" class="btn-ghost" id="sheetCancel" style="flex:1">Cancel</button></div>
-  </div>
-</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function () {
   "use strict";
 
-  // ---------- Generic defaults (no site-specific terms; your own sections live only in localStorage) ----------
-  const DEFAULT_SECTIONS = [
-    "Equipment Down: equipment down, down equipment, equipment",
-    "Safety: safety, safety items",
-    "Parts: parts, part, parts on order",
-    "Work Orders: work orders, work order, w o, w o s, open work orders",
-    "Watch List: watch list, watchlist, watch items",
-    "Projects: projects, project",
-    "Contractors: contractors, contractor, vendors, vendor",
-    "Dock: dock, docks",
-    "Notes: notes, other, general"
-  ].join("\n");
-
-  const SAMPLE = "Okay end of shift notes night shift um so conveyor 7 is down. Bad gearbox. Locked out tagged out. Next. " +
-    "Called the vendor, they are coming tomorrow at 9. Next. " +
-    "Air compressor is leaking oil on the floor by door 4. Put absorbent down. Needs cleanup. Next. " +
-    "Replaced the belt on conveyor 3 because. It was frayed and slipping. Next. " +
-    "Forklifts 12, 14, 17 and 22 are all due for PM this week. Next. " +
-    "Need two more 24 volt power supplies. We are down to zero spares um. Next. " +
-    "Label printer at packing is acting up. Intermittent jams, couldn't reproduce. Keep an eye on it. Next. " +
-    "Work order 10233 motor replacement on line 3 still open. Ran out of time so yeah. Next. " +
-    "Dock door 6 leveler won't come up. Trailer stuck at the door. Next. " +
-    "The mezzanine lighting upgrade project is about 80% done. Next. " +
-    "Tell the day lead we're short two techs tomorrow um that's it";
-
-  const SAMPLE_MARKERS = "Equipment down conveyor 7 gearbox is shot locked out and then we next item forklift 12 won't start battery is dead. " +
-    "Safety. Oil leak by door 4 put absorbent down. Next, guard is missing on the compressor belt. " +
-    "Next. Parts need two 24 volt power supplies and bearings for units 101 102 103 104 and 105 and then we. " +
-    "Work orders WO 10233 still open ran out of time new item WO 10240 PM on line 2 not finished. " +
-    "Watch list label printer at packing jams on and off. " +
-    "Contractors electrician coming tomorrow at 9. " +
-    "Next. Dock door 6 leveler stuck. " +
-    "Notes tell the day lead we are short two techs um so yeah.";
-
-  const PALETTE = ["var(--red)", "var(--yellow)", "var(--blue)", "var(--amber)", "var(--violet)", "var(--green)", "var(--accent)", "#ff9f6b", "#7fd1ff", "#e58cff"];
-  const LS_SETUP = "handoffbot.setup.v2", LS_WORK = "handoffbot.work.v2";
-  const UNSORTED = "__unsorted";
-
-  // ---------- Generic keyword concepts (matched against the section NAME) ----------
-  const RXS = {
-    down: /\b(?:is|are|was|went|still|it's|its|been|currently|remains?|stays?|stayed|hard|left|all)\s+down\b(?!\s+to\b)|\bdown\s+(?:hard|for|until|since|at|till|pending|waiting)\b|\bout of service\b|\bOOS\b|\bLOTO\b|\btagged out\b|\bred[\s-]?tagged\b|\bwon'?t (?:run|start|power|move|boot|come up|open|close)\b|\bnot running\b|\bnot working\b|\binop(?:erable)?\b|\bdead\b|\boffline\b|\bfaulted\b|\bshot\b|\bcracked\b|\bbroken\b|\bseized\b|\bdisabled\b|\bshut (?:it )?down\b|\bstuck\b/i,
-    safety: /\b(safety|unsafe|hazard\w*|injur\w*|hurt|near[\s-]?miss|guard\w*|spill\w*|leak\w*|oil on (?:the )?floor|slip|trip hazard|pinch|exposed wir\w*|fire|smoke|burning|PPE|ladder|first aid|blocked (?:exit|egress)|bypass\w*|E-stops?|pull[\s-]?cords?|light curtains?|wet floor|sparks?|absorbent|cone)\b/i,
-    parts: /\b(on order|ordered|back[\s-]?order\w*|ETA|parts?|spares?|in stock|out of stock|down to (?:zero|one|two|\d+)|low on|ran out of (?!time)|need(?:s|ed)? (?:a |an |two |three |\d+ |more |another |new |replacement |some )|part number|waiting on|shipment|bearings?|power suppl\w+)\b/i,
-    wo: /\bWO-\d+|\b(work (?:order|request)s?|tickets?|PM|PMs|preventive|still open|left open|not (?:finished|done|complete)|didn'?t (?:finish|get to)|ran out of time|carry(?:ing)? over|follow[\s-]?up|due for)\b/i,
-    watchStrong: /\b(intermittent\w*|on and off|off and on|randomly|sporadic\w*|comes and goes|keep an eye|keep eyes|flaky|acting up|couldn'?t (?:reproduce|replicate)|could not (?:reproduce|replicate)|cleared (?:it)?self|self[\s-]cleared)\b/i,
-    watch: /\b(random|every (?:so often|once in a while|hour|couple|few)|now and then|monitor\w*|keeps? \w+ing|nuisance|twice|a few times|couple (?:of )?times|occasional\w*)\b/i,
-    projects: /\b(projects?|install\w*|upgrade\w*|retrofit\w*|rollout|pilot|construction|capital|phase \d|layout|percent done|% done|\d+% (?:done|complete))\b/i,
-    contractors: /\b(contractors?|vendors?|outside (?:crew|company|tech)|service tech|electrician|plumber|on[\s-]?site|came out|coming (?:in|out|tomorrow|at)|quote)\b/i,
-    dock: /\b(docks?|dock doors?|trailers?|levelers?|dock plates?|restraints?|bumpers?|yard|seal|shelter)\b/i,
-    notes: /\b(lead|supervisor|manager|heads up|fyi|reminder|remind|meeting|training|staffing|short (?:\w+ )?(?:techs?|people|staff|handed)|call[\s-]?outs?|overtime|tell|let (?:\w+ )?know|next shift|day shift|night shift)\b/i,
-    compliance: /\b(compliance|audit\w*|inspect\w*|OSHA|permits?|extinguishers?|eyewash|certif\w*|SDS|regulat\w*|paperwork|logs?)\b/i,
-    building: /\b(building|facilit\w*|roof\w*|HVAC|heat\w*|cooling|air condition\w*|lights?|lighting|plumbing|restrooms?|bathrooms?|toilets?|water|parking|fence|ceiling|walls?|floor drains?)\b/i,
-    carrier: /\b(carriers?|trucks?|drivers?|pick[\s-]?ups?|late|linehaul|loads?|departure|arrival|schedule)\b/i,
-    sorter: /\b(sorters?|jams?|jammed|induct\w*|diverts?|chutes?|trays?|scanners?)\b/i,
-    events: /\b(incidents?|outages?|escalat\w*|major event|severity|downtime)\b/i
-  };
-  const CONCEPTS = [
-    { name: /\bdown\b|outage|breakdown|out of service/i, rules: [[RXS.down, 3]] },
-    { name: /safety|hazard|\behs\b/i, rules: [[RXS.safety, 3]] },
-    { name: /\bparts?\b|spares|inventory|stores/i, rules: [[RXS.parts, 2]] },
-    { name: /work ?orders?|\bwos?\b|tickets?|maintenance requests?/i, rules: [[/\bWO-\d+/, 2], [RXS.wo, 2]] },
-    { name: /watch|monitor|intermittent/i, rules: [[RXS.watchStrong, 3], [RXS.watch, 1]] },
-    { name: /project/i, rules: [[RXS.projects, 2]] },
-    { name: /contractor|vendor|outside/i, rules: [[RXS.contractors, 2]] },
-    { name: /dock|shipping|receiving|yard/i, rules: [[RXS.dock, 2]] },
-    { name: /\bnotes?\b|other|general|misc|\blead\b/i, rules: [[RXS.notes, 1]] },
-    { name: /compliance|audit|regulat/i, rules: [[RXS.compliance, 2]] },
-    { name: /building|facilit|grounds/i, rules: [[RXS.building, 2]] },
-    { name: /carrier|transport|trucking|linehaul/i, rules: [[RXS.carrier, 2]] },
-    { name: /sorter|sortation/i, rules: [[RXS.sorter, 1]] },
-    { name: /event|incident|escalation/i, rules: [[RXS.events, 2]] }
+  // ---------- Section presets (generic; no site-specific terms) ----------
+  // sc = on-screen color (dark theme), pc = paste color (readable on white email/Notes)
+  const PRESETS = [
+    { name: "Critical repairs", sc: "#ff6b6b", pc: "#c62828", ex: ["Conveyor 7 down, bad gearbox, locked out and tagged out.", "Forklift 12 won't start. Dead battery, parked at the charger."] },
+    { name: "Minor repairs", sc: "#f0b429", pc: "#b26a00", ex: ["Replaced the frayed belt on conveyor 3.", "Tightened a loose guard rail by door 4."] },
+    { name: "Parts on order", sc: "#6aa8ff", pc: "#1f5fbf", ex: ["Two 24V power supplies ordered, ETA Thursday.", "Down to one spare photo eye."] },
+    { name: "Safety", sc: "#ff9f6b", pc: "#d2510f", ex: ["Oil leak by the air compressor. Absorbent down, area coned off."] },
+    { name: "Watch list", sc: "#b48cff", pc: "#6a3fc9", ex: ["Label printer at packing jams on and off. Couldn't make it happen again."] },
+    { name: "Work orders", sc: "#3dd6c6", pc: "#0e7c70", ex: ["WO-10233 motor swap on line 3 still open, ran out of time.", "PMs due on forklifts 14 and 17 this week."] },
+    { name: "Contractors/vendors", sc: "#6bcf7f", pc: "#2e7d32", ex: ["Electrician coming tomorrow at 9 for the dock lights."] },
+    { name: "Notes", sc: "#7fd1ff", pc: "#0277a8", ex: ["Short two techs tomorrow. Let the day lead know."] }
   ];
+  const CUSTOM_COLORS = [["#e58cff", "#9c27b0"], ["#ffd866", "#8d6e00"], ["#ff8fa3", "#c2185b"], ["#9be15d", "#558b2f"], ["#8fb8ff", "#3949ab"]];
+  const CUSTOM_EX = ["Type or talk your notes for this section."];
+  const LS_SETUP = "handoffbot.setup.v3", LS_WORK = "handoffbot.work.v3";
+  const EMPTY_TEXT_DEFAULT = "No issues";
 
-  // ---------- Tokens (for marker / alias matching that tolerates dictation spelling) ----------
+  // ---------- Text cleanup (reused from v2) ----------
   const NUMW = { zero: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10", eleven: "11", twelve: "12" };
-  function toks(s) {
-    const re = /[a-z]+|\d+/gi, out = [];
-    let m;
-    while ((m = re.exec(s))) {
-      let w = m[0].toLowerCase();
-      if (w === "slash") continue;          // "A slash B" == "A/B" == "A B"
-      if (NUMW[w]) w = NUMW[w];               // "one" == "1"
-      out.push({ w, start: m.index, end: m.index + m[0].length });
-    }
-    return out;
-  }
-  const joinTok = (s) => toks(s).map((t) => t.w).join("");
-  // Does the phrase (joined, spaces ignored so "P L C" == "PLC") start at token k? returns last token index or -1
-  function matchAt(tk, k, joined) {
-    let acc = "";
-    for (let j = k; j < tk.length; j++) {
-      acc += tk[j].w;
-      if (acc === joined || acc === joined + "s" || acc + "s" === joined) return j;
-      if (acc.length > joined.length + 1 || joined.indexOf(acc) !== 0) return -1;
-    }
-    return -1;
-  }
-  function containsPhrase(tk, joined) {
-    for (let k = 0; k < tk.length; k++) if (matchAt(tk, k, joined) >= 0) return true;
-    return false;
-  }
-
-  // ---------- Setup ----------
-  let setup = { sectionsText: DEFAULT_SECTIONS, manager: "", shift: "", omitEmpty: false, emptyText: "No issues" };
-  let SECS = [];
-
-  function parseSections(text) {
-    const out = [], seen = new Set();
-    String(text || "").split(/\r?\n/).forEach((line) => {
-      line = line.trim();
-      if (!line || line[0] === "#" || line.toLowerCase() === "[sections]") return;
-      let name = line, rest = "";
-      const ci = line.indexOf(":");
-      if (ci > 0) { name = line.slice(0, ci); rest = line.slice(ci + 1); }
-      let aliasPart = rest, kwPart = "";
-      const pi = rest.indexOf("|");
-      if (pi >= 0) { aliasPart = rest.slice(0, pi); kwPart = rest.slice(pi + 1); }
-      name = name.replace(/\s+/g, " ").trim().slice(0, 60);
-      if (!name) return;
-      const key = name.toLowerCase();
-      if (seen.has(key)) return;
-      seen.add(key);
-      out.push({
-        name, key,
-        aliases: aliasPart.split(",").map((s) => s.trim()).filter(Boolean),
-        keywords: kwPart.split(",").map((s) => s.trim()).filter(Boolean)
-      });
-    });
-    return out;
-  }
-  function compileSections(text) {
-    let list = parseSections(text);
-    if (!list.length) list = parseSections(DEFAULT_SECTIONS);
-    return list.map((s, i) => {
-      const phrases = [...new Set([s.name].concat(s.aliases).map(joinTok).filter(Boolean))];
-      const kw = [...new Set(s.keywords.map(joinTok).filter(Boolean))];
-      const rules = [];
-      CONCEPTS.forEach((c) => { if (c.name.test(s.name)) rules.push(...c.rules); });
-      return { ...s, phrases, kw, rules, color: PALETTE[i % PALETTE.length] };
-    });
-  }
-  function fallbackKey() {
-    const f = SECS.find((s) => /\b(notes?|other|general|misc\w*)\b/i.test(s.name));
-    return f ? f.key : UNSORTED;
-  }
-  function secByKey(k) { return SECS.find((s) => s.key === k); }
-  function secName(k) { const s = secByKey(k); return s ? s.name : "Needs a section"; }
-
-  // ---------- Filler + cleanup ----------
   const LEAD_FILLER = /^(?:[\s,.;:!?-]*\b(?:and then we|and then|and so|and uh|and um|and|so yeah|so|um+|uh+|er+m*|hmm+|ok(?:ay)?|alright|all right|also|then|next|well|oh|plus|yeah|like|basically|anyway)\b)+[\s,.;:!?-]*/i;
   const TRAIL_FILLER = /(?:[\s,.;:!?-]*\b(?:and then we|and then|and we|so we|and so|and uh|and um|so yeah|yeah|and|so|um+|uh+|er+m*|hmm+|then|ok(?:ay)?|alright|i think that'?s it|that'?s it|that'?s all|that'?s about it|that'?s everything|but|or|you know)\b)+[\s,.;:!?-]*$/i;
   function stripFiller(t) {
@@ -396,7 +271,6 @@
     do { prev = t; t = t.replace(LEAD_FILLER, "").replace(TRAIL_FILLER, "").trim(); } while (t !== prev);
     return t;
   }
-
   function clean(s) {
     let t = " " + s + " ";
     t = t.replace(/[,\s]+\b(?:u+m+|u+h+|e+r+m+|hmm+|you know|i mean|basically|kinda|sort of)\b[,]?(?=\s)/gi, " ");
@@ -411,27 +285,22 @@
       [/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, (m) => m[0].toUpperCase() + m.slice(1).toLowerCase()]
     ];
     swaps.forEach(([re, rep]) => { t = t.replace(re, rep); });
-    // number lists that dictation broke with periods: "3. 5. And 9" -> "3, 5 and 9"
     t = t.replace(/(\d)\.\s+(?=\d)/g, "$1, ").replace(/(\d)[.,]?\s+(?:and|&)\s+(?=\d)/gi, "$1 and ");
     t = t.replace(/\s+/g, " ").trim();
     t = stripFiller(t);
     t = t.replace(/\s+([,.;!?])/g, "$1").replace(/([,.;!?])\1+/g, "$1").replace(/,\s*\./g, ".").replace(/[,;:\s-]+$/, "");
-    // lowercase stray capitals dictation adds after a false period ("...slipping. It was") are left as-is; just capitalise the start
     if (!t) return "";
     t = t[0].toUpperCase() + t.slice(1);
     if (!/[.!?]$/.test(t)) t += ".";
     return t;
   }
-
-  // ---------- Segmenting ----------
+  // "next" between items (reused from v2): splits, except "next week", "the next shift", etc.
   const NEXT_NOT_AFTER = /\b(the|this|that|by|until|till|for|of|on|in|over|each|every|a|an|our|your|their|his|her|its|is|was|be)\s*$/i;
   const NEXT_NOT_BEFORE = /^[\s,]*(week|weekend|weeks|shift|shifts|day|days|time|times|to|month|morning|afternoon|night|nights|monday|tuesday|wednesday|thursday|friday|saturday|sunday|year|crew|lead|person|guy|tech|techs|one|ones|few|couple|step|steps|stop|truck|trailer|load|in line|batch|round|visit|pm)\b/i;
   function hardChunks(raw) {
-    let s = String(raw || "").replace(/\r/g, ""), usedNext = false;
+    let s = String(raw || "").replace(/\r/g, "");
     s = s.replace(/^\s*(?:[-*•·>]+|\d+[.)])\s+/gm, "");
-    s = s.replace(/\b(?:new item|next item)\b/gi, (m) => { usedNext = true; return m; });
     s = s.replace(/\b(?:new item|next item|new line|next line|next up|moving on|another thing is|another thing|one more thing is|one more thing|other thing is)\b[\s,.:;-]*/gi, "\n");
-    // bare "next" splits, except "next week", "the next shift", etc.
     let out = "", last = 0, m;
     const re = /\bnext\b[\s,.:;-]*/gi;
     while ((m = re.exec(s))) {
@@ -439,177 +308,31 @@
       if (NEXT_NOT_AFTER.test(before) || NEXT_NOT_BEFORE.test(after)) continue;
       out += s.slice(last, m.index) + "\n";
       last = m.index + m[0].length;
-      usedNext = true;
     }
     s = out + s.slice(last);
-    const chunks = s.split(/\n+/).map((x) => x.trim()).filter(Boolean);
-    chunks.usedNext = usedNext; // you said "next" / "new item": each chunk is one item, never split on sentences
-    return chunks;
+    return s.split(/\n+/).map((x) => x.trim()).filter(Boolean);
   }
-  function sentences(chunk) {
-    return chunk.replace(/([.!?]+)\s+/g, "$1\u0001").split("\u0001").map((x) => x.trim()).filter(Boolean);
-  }
-
-  const MARKER_SKIP = new Set(["um", "umm", "uh", "uhh", "so", "okay", "ok", "alright", "and", "then", "we", "also", "next", "well", "yeah", "oh", "now",
-    "section", "category", "for", "under", "moving", "on", "to", "over", "the"]);
-  const KEEP_MARKER = /^\s*(?:\d|#|'s\b|’s\b|(?:is|are|was|were|has|had|have|still|went|needs?|keeps?|will|won'?t|can'?t|isn'?t|wasn'?t|aren'?t|got|getting|came|coming|number|no|door|doors|unit|units|went|being|should|did|didn'?t|does|doesn'?t)\b)/i;
-  // Section name/alias at the start of a sentence? -> {sec, rest}
-  function detectMarker(sent) {
-    const tk = toks(sent);
-    let best = null;
-    for (let k = 0; k < tk.length && k <= 5; k++) {
-      SECS.forEach((s) => {
-        s.phrases.forEach((p) => {
-          const j = matchAt(tk, k, p);
-          if (j >= 0 && (!best || j > best.j)) best = { sec: s, j, k };
-        });
-      });
-      if (best) break;
-      if (!MARKER_SKIP.has(tk[k].w)) break;
-    }
-    if (!best) return null;
-    const startIdx = tk[best.k].start, endIdx = tk[best.j].end;
-    let rest = sent.slice(endIdx);
-    const punct = /^[\s]*[,.:;!?-]/.test(rest);
-    const afterThe = best.k > 0 && tk[best.k - 1].w === "the"; // "the bathroom sink..." is content, not a header
-    const kept = !punct && (KEEP_MARKER.test(rest) || afterThe);
-    // names a specific asset ("Pump 4 ...", "Line one had ...", "Dock door 7 ...", "Chillers units 14 ...")
-    const ident = tk.slice(best.k, best.j + 1).some((t) => /^\d/.test(t.w)) || /^\s*(?:\d|#|(?:door|doors|unit|units|number|no)\b)/i.test(rest);
-    if (kept) rest = afterThe ? sent.slice(tk[best.k - 1].start) : sent.slice(startIdx); // "Dock door 6 is stuck" keeps its name and is an item, not a section header
-    return { sec: best.sec, rest: rest.replace(/^[\s,.:;!?-]+/, ""), kept, ident };
-  }
-
-  const DANGLING = /\b(?:we|so|the|a|an|to|of|and|but|because|cause|with|on|at|for|is|was|are|were|in|it|that|our|my|their|his|her|from|by|into|onto|no|number|about|then we|so we|had|have|has|be|been|getting|got|which|who|or)[\s,]*[.!?]*$/i;
-  const STRONG_END = /\band then(?: we)?[\s,]*[.!?]*$/i;
-  const CONTINUES = /^(?:because|cause|which|since|until|till|but|or|that|who|where|while|with|without|except|so that|to)\b/i;
-  const NUMLIST = /^(?:(?:and|&)\s+)?[\d\s,.&#-]*(?:(?:and|&)\s+[\d\s,.#-]+)*[.!?]?$/i;
-  function shouldMerge(prevText, cur) {
-    if (!prevText) return false;
-    if (STRONG_END.test(prevText)) return false;
-    if (DANGLING.test(prevText)) return true;
-    if (CONTINUES.test(cur)) return true;
-    if (NUMLIST.test(cur)) return true;
-    if (/\d[.!?]?$/.test(prevText) && /^(?:(?:and|&)\s+)?\d/i.test(cur)) return true;
-    if (cur.split(/\s+/).length <= 2 && !/^(?:that'?s (?:it|all)|done)\b/i.test(cur)) return true;
-    return false;
-  }
-
-  // inside a "next" item, only rejoin a sentence dictation clearly cut mid-thought ("...because. It was frayed", "3. 5. And 9")
-  const CUT_END = /\b(?:so|the|a|an|to|of|and|but|because|cause|with|at|for|from|by|into|onto|about|which|who|or|our|my|their|number|no)[\s,]*[.!?]*$/i;
-  function midThought(prevText, cur) {
-    return CUT_END.test(prevText) || CONTINUES.test(cur) || NUMLIST.test(cur) || (/\d[.!?]?$/.test(prevText) && /^(?:(?:and|&)\s+)?\d/i.test(cur));
-  }
-
-  function guess(text) {
-    const tk = toks(text);
-    let best = null, bestScore = 0;
-    SECS.forEach((s) => {
-      let sc = 0;
-      s.phrases.forEach((p) => { if (containsPhrase(tk, p)) sc += 6; });
-      s.kw.forEach((p) => { if (containsPhrase(tk, p)) sc += 4; }); // your own keywords beat the generic ones
-      s.rules.forEach(([rx, w]) => { if (rx.test(text)) sc += w; });
-      if (sc > bestScore) { bestScore = sc; best = s; }
-    });
-    return { key: best ? best.key : fallbackKey(), score: bestScore };
-  }
-
-  // split on "and then (we)", "also", "plus" only when both halves are real items about different things
-  function softSplit(text) {
-    const re = /[\s,]+(?:and then we|and then|also|plus)[\s,]+/gi;
-    let m, parts = [], last = 0;
-    while ((m = re.exec(text))) {
-      const left = text.slice(last, m.index), right = text.slice(m.index + m[0].length);
-      if (left.split(/\s+/).length < 4 || right.split(/\s+/).length < 4) continue;
-      if (/\d\s*$/.test(left) && /^\s*\d/.test(right)) continue; // number list
-      const gl = guess(clean(left)), gr = guess(clean(right));
-      if (gl.score > 0 && gr.score > 0 && gl.key !== gr.key) { parts.push(left); last = m.index + m[0].length; }
-    }
-    parts.push(text.slice(last));
-    return parts;
-  }
-
-  // join a sentence that dictation cut mid-thought: "...conveyor 3 because. It was frayed" -> "...because it was frayed"
-  function joinSentences(a, b) {
-    a = a.replace(/[.!?]+$/, "");
-    if (/^[A-Z][a-z]/.test(b) && !/^I\b/.test(b)) b = b[0].toLowerCase() + b.slice(1);
-    return (a + (/\d$/.test(a) && /^\d/.test(b) ? ", " : " ") + b).trim(); // "3. 5. And 9" -> "3, 5 and 9"
-  }
-  // drop an intro like "Okay end of shift notes night shift um so" from the front of the first item
-  function stripHeader(t) {
-    const m = t.match(/^(.{0,30}?)\b(?:end of (?:the )?(?:shift|day|night)(?: notes| pass ?-?down| report)?|shift notes|pass ?-?down notes|hand ?-?off notes|handover notes)\b(?:\s+(?:for\s+)?(?:the\s+)?(?:day|night|swing|days|nights|1st|2nd|3rd)\s+shift)?/i);
-    if (!m || m[1].split(/\s+/).filter(Boolean).length > 4) return t;
-    const rest = stripFiller(t.slice(m[0].length));
-    return rest.split(/\s+/).length >= 3 ? rest : t;
-  }
-  const HEADER_RX = /\b(end of (?:the )?(?:shift|day|night)|shift notes|pass ?-?down|hand ?-?off(?: notes)?|handover notes)\b/i;
   const JUNK_RX = /^(?:that'?s (?:it|all|about it|everything)|i think that'?s (?:it|all)|end of notes|done|over)[.!]?$/i;
-
-  let uid = 0;
-  const nid = () => "i" + Date.now().toString(36) + (++uid);
-
-  function parse(raw) {
-    const units = [];
-    const chunks = hardChunks(raw), byNext = chunks.usedNext;
-    chunks.forEach((chunk) => {
-      let prev = null;
-      sentences(chunk).forEach((sent) => {
-        sent = stripHeader(sent);
-        const mk = detectMarker(sent);
-        if (byNext && prev) {
-          // Between two "next"s everything stays one item. Only a spoken section header
-          // ("Safety.", "Notes, ...", "Projects lighting...") or a section name + a specific asset
-          // ("Pump 4 is leaking") starts a new one; plain sentences and "Parts are ordered" stay in.
-          if (mk && (!mk.kept || mk.ident)) { prev = { sec: mk.sec.key, text: mk.rest, marker: true, kept: mk.kept, byNext }; units.push(prev); return; }
-          if (!prev.text) prev.text = sent;
-          else if (midThought(prev.text, sent)) prev.text = joinSentences(prev.text, sent);
-          else prev.text = prev.text + (/[.!?]$/.test(prev.text) ? " " : ". ") + sent;
-          return;
-        }
-        if (mk) { prev = { sec: mk.sec.key, text: mk.rest, marker: true, kept: mk.kept, byNext }; units.push(prev); return; }
-        if (prev && shouldMerge(prev.text, sent)) { prev.text = joinSentences(prev.text, sent); return; }
-        prev = { sec: null, text: sent, marker: false, byNext };
-        units.push(prev);
-      });
-      if (prev) prev.endChunk = true;
-    });
-
-    const res = [], seen = new Set();
-    let current = null, shift = "";
-    const sm = String(raw || "").slice(0, 160).match(/\b(day|night|swing|days|nights)\s*shift\b/i);
-    if (sm) shift = /^n/i.test(sm[1]) ? "Night" : /^d/i.test(sm[1]) ? "Day" : "Swing";
-    units.forEach((u) => {
-      // A spoken header ("Safety ...", "Parts.") routes everything after it until the next header.
-      // A name that is part of the item ("Dock door 6 is stuck") routes just that item, unless you are already dictating with headers.
-      let target = current;
-      if (u.marker) { target = u.sec; if (!u.kept || current) current = u.sec; }
-      let text = stripHeader(u.text);
-      if (!text) return;
-      (u.byNext ? [text] : softSplit(text)).forEach((piece) => {
-        const words = piece.split(/\s+/).length;
-        if (HEADER_RX.test(piece) && words <= 10 && !u.marker) return;
-        const t = clean(piece);
-        if (!t || t.replace(/[^a-z0-9]/gi, "").length < 3 || JUNK_RX.test(t)) return;
-        const dk = t.toLowerCase().replace(/[^a-z0-9]/g, "");
-        if (seen.has(dk)) return; // one item, one section
-        seen.add(dk);
-        res.push({ id: nid(), sec: target || guess(t).key, text: t });
-      });
-    });
-    return { items: res, shift, usedMarkers: units.some((u) => u.marker && !u.kept) };
+  function boxItems(text) {
+    return hardChunks(text).map(clean).filter((t) => t && t.replace(/[^a-z0-9]/gi, "").length >= 2 && !JUNK_RX.test(t));
   }
 
   // ---------- State ----------
-  let items = [];
+  const keyOf = (n) => String(n).toLowerCase().replace(/\s+/g, " ").trim();
+  let setup = { name: "", title: "", shift: "", date: "", dateSetOn: "", picked: [], customs: [], omitEmpty: false, emptyText: EMPTY_TEXT_DEFAULT, saved: false };
+  let texts = {};           // section key -> raw box text (your words)
+  let sampleMode = false;   // opened with #sample: your saved setup is untouched until you tap Save (notes you type are still kept on this device)
+
   const $ = (s) => document.querySelector(s);
   const el = {
-    raw: $("#raw"), date: $("#date"), manager: $("#manager"), shift: $("#shift"), secText: $("#secText"),
-    emptyText: $("#emptyText"), omitEmpty: $("#omitEmpty"), omitEmpty2: $("#omitEmpty2"), ioText: $("#ioText"),
-    review: $("#review"), preview: $("#preview"), toast: $("#toast"), sheet: $("#sheet"), sheetOpts: $("#sheetOpts")
+    name: $("#name"), title: $("#title"), shift: $("#shift"), date: $("#date"), chips: $("#chips"), customName: $("#customName"),
+    omitEmpty: $("#omitEmpty"), omitEmpty2: $("#omitEmpty2"), tpl: $("#tplPreview"), boxes: $("#boxes"), preview: $("#preview"),
+    ioText: $("#ioText"), toast: $("#toast")
   };
 
   function toast(msg) {
     el.toast.textContent = msg; el.toast.classList.add("show");
-    clearTimeout(el.toast._t); el.toast._t = setTimeout(() => el.toast.classList.remove("show"), 2200);
+    clearTimeout(el.toast._t); el.toast._t = setTimeout(() => el.toast.classList.remove("show"), 2400);
   }
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
   function todayISO() { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
@@ -619,282 +342,381 @@
     return String(m).padStart(2, "0") + "/" + String(d).padStart(2, "0") + "/" + y;
   }
 
+  // All section options in display order: presets, then your own
+  function allOptions() {
+    const list = PRESETS.map((p) => ({ name: p.name, key: keyOf(p.name), sc: p.sc, pc: p.pc, ex: p.ex, custom: false }));
+    setup.customs.forEach((n, i) => {
+      const c = CUSTOM_COLORS[i % CUSTOM_COLORS.length];
+      list.push({ name: n, key: keyOf(n), sc: c[0], pc: c[1], ex: CUSTOM_EX, custom: true });
+    });
+    return list;
+  }
+  function pickedSecs() { const p = new Set(setup.picked); return allOptions().filter((o) => p.has(o.key)); }
+
   // ---------- Persistence (localStorage only) ----------
-  function saveSetup() { try { localStorage.setItem(LS_SETUP, JSON.stringify(setup)); } catch (_) {} }
-  function saveWork() { try { localStorage.setItem(LS_WORK, JSON.stringify({ raw: el.raw.value, items })); } catch (_) {} }
+  function saveSetup() { if (sampleMode) return; try { localStorage.setItem(LS_SETUP, JSON.stringify(setup)); } catch (_) {} }
+  function saveWork() { try { localStorage.setItem(LS_WORK, JSON.stringify({ texts })); } catch (_) {} }
   function loadAll() {
     try { const s = JSON.parse(localStorage.getItem(LS_SETUP) || "null"); if (s) setup = { ...setup, ...s }; } catch (_) {}
     try {
-      const w = JSON.parse(localStorage.getItem(LS_WORK) || "null");
-      if (w) { el.raw.value = w.raw || ""; items = Array.isArray(w.items) ? w.items.filter((i) => i && i.text).map((i) => ({ id: nid(), sec: i.sec, text: i.text })) : []; }
-      else {
-        const old = JSON.parse(localStorage.getItem("handoffbot.v1") || "null"); // carry over v1 notes + name
-        if (old) { el.raw.value = old.raw || ""; if (old.from && !setup.manager) setup.manager = old.from; if (old.shift && !setup.shift) setup.shift = old.shift; }
+      if (!localStorage.getItem(LS_SETUP)) { // carry over name/shift from v2
+        const o = JSON.parse(localStorage.getItem("handoffbot.setup.v2") || "null");
+        if (o) { setup.name = o.manager || ""; setup.shift = o.shift || ""; setup.omitEmpty = !!o.omitEmpty; if (o.emptyText) setup.emptyText = o.emptyText; }
       }
     } catch (_) {}
-    SECS = compileSections(setup.sectionsText);
+    try { const w = JSON.parse(localStorage.getItem(LS_WORK) || "null"); if (w && w.texts && typeof w.texts === "object") texts = w.texts; } catch (_) {}
+    if (!Array.isArray(setup.picked)) setup.picked = [];
+    if (!Array.isArray(setup.customs)) setup.customs = [];
+    if (setup.dateSetOn !== todayISO()) { setup.date = todayISO(); setup.dateSetOn = todayISO(); }
   }
   function fillSetupForm() {
-    el.secText.value = setup.sectionsText; el.manager.value = setup.manager || ""; el.shift.value = setup.shift || "";
-    el.emptyText.value = setup.emptyText || ""; el.omitEmpty.checked = !!setup.omitEmpty; el.omitEmpty2.checked = !!setup.omitEmpty;
+    el.name.value = setup.name || ""; el.title.value = setup.title || ""; el.shift.value = setup.shift || "";
+    el.date.value = setup.date || todayISO();
+    el.omitEmpty.checked = el.omitEmpty2.checked = !!setup.omitEmpty;
   }
 
-  // ---------- Export / import ----------
+  // ---------- Output ----------
+  function headerLines() {
+    const L = [];
+    if (setup.date) L.push(["Date", fmtDate(setup.date)]);
+    if (setup.name) L.push(["Name", setup.name]);
+    if (setup.title) L.push(["Title", setup.title]);
+    if (setup.shift) L.push(["Shift", setup.shift]);
+    return L;
+  }
+  // model: [{sec, items:[...], example:bool}] for the real passdown
+  function passdownModel(useExamples) {
+    const omit = !!setup.omitEmpty;
+    const out = [];
+    pickedSecs().forEach((s) => {
+      let items = boxItems(texts[s.key] || ""), example = false;
+      if (useExamples) { items = s.ex.slice(); example = true; }
+      if (!items.length && omit) return;
+      out.push({ sec: s, items, example });
+    });
+    return out;
+  }
+  const hasAnyText = () => pickedSecs().some((s) => boxItems(texts[s.key] || "").length);
+
+  function asText() {
+    const lines = ["SHIFT PASSDOWN"];
+    headerLines().forEach(([k, v]) => lines.push(k + ": " + v));
+    const empty = setup.emptyText || EMPTY_TEXT_DEFAULT;
+    passdownModel(false).forEach((g) => {
+      lines.push("", g.sec.name.toUpperCase());
+      if (!g.items.length) lines.push("- " + empty);
+      g.items.forEach((i) => lines.push("- " + i));
+    });
+    return lines.join("\n");
+  }
+  // Inline-styled HTML so it pastes in color into email / Outlook / Notes
+  function asHTML() {
+    const empty = setup.emptyText || EMPTY_TEXT_DEFAULT;
+    const font = "font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
+    let h = `<div style="${font}font-size:14px;line-height:1.45;color:#1a1a1a;">`;
+    h += `<div style="font-size:16px;font-weight:bold;margin:0 0 4px 0;">Shift Passdown</div>`;
+    const hl = headerLines();
+    if (hl.length) h += `<div style="color:#444;margin:0 0 10px 0;">` + hl.map(([k, v]) => `<b>${esc(k)}:</b> ${esc(v)}`).join(" &nbsp;|&nbsp; ") + `</div>`;
+    passdownModel(false).forEach((g) => {
+      const c = g.sec.pc;
+      h += `<div style="border-left:4px solid ${c};padding:2px 0 2px 10px;margin:0 0 12px 0;">`;
+      h += `<div style="color:${c};font-weight:bold;font-size:13px;letter-spacing:0.5px;margin:0 0 2px 0;">${esc(g.sec.name.toUpperCase())}</div>`;
+      if (!g.items.length) h += `<div style="color:#777;font-style:italic;">${esc(empty)}</div>`;
+      else h += `<ul style="margin:0 0 0 18px;padding:0;">` + g.items.map((i) => `<li style="margin:0 0 2px 0;">${esc(i)}</li>`).join("") + `</ul>`;
+      h += `</div>`;
+    });
+    return h + `</div>`;
+  }
+  // on-screen colored layout (v2 group look)
+  function screenPassdown(model, opts) {
+    const empty = setup.emptyText || EMPTY_TEXT_DEFAULT;
+    const hl = headerLines();
+    let h = `<div class="pd-head"><div class="pd-title">Shift Passdown</div>`;
+    if (hl.length) h += hl.map(([k, v]) => `${esc(k)}: <b>${esc(v)}</b>`).join(" &nbsp;·&nbsp; ");
+    else if (opts.template) h += `<span class="ex">Date · Name · Title · Shift</span>`;
+    h += `</div>`;
+    if (opts.note) h += `<p class="pd-note">${opts.note}</p>`;
+    if (!model.length) return h + `<div class="empty-state">${opts.emptyMsg}</div>`;
+    return h + model.map((g) => `
+      <div class="grp" style="--c:${g.sec.sc}" data-sec="${esc(g.sec.key)}">
+        <div class="grp-head"><span class="grp-title">${esc(g.sec.name)}</span>${g.example ? "" : `<span class="cnt">${g.items.length}</span>`}</div>
+        <ul>${g.items.length ? g.items.map((i) => `<li${g.example ? ' class="ex"' : ""}>${esc(i)}</li>`).join("") : `<li class="none">${esc(empty)}</li>`}</ul>
+      </div>`).join("");
+  }
+
+  // ---------- Rendering ----------
+  function renderChips() {
+    const p = new Set(setup.picked);
+    el.chips.innerHTML = allOptions().map((o) => `
+      <button type="button" class="chip${p.has(o.key) ? " on" : ""}" style="--c:${o.sc}" data-key="${esc(o.key)}" aria-pressed="${p.has(o.key)}">${esc(o.name).replace(/\//g, "/<wbr>")}${
+        o.custom ? `<span class="x" data-rmcustom="${esc(o.key)}" role="button" aria-label="Remove ${esc(o.name)}">✕</span>` : ""}</button>`).join("");
+  }
+  function renderTemplate() {
+    const secs = pickedSecs().map((s) => ({ sec: s, items: s.ex.slice(), example: true }));
+    el.tpl.innerHTML = screenPassdown(secs, { template: true, emptyMsg: "Tap sections above and they'll appear here." });
+  }
+  function headerSummary() {
+    const bits = [fmtDate(setup.date) || "No date", setup.name || "", setup.title || "", setup.shift ? setup.shift + " shift" : ""].filter(Boolean);
+    return bits.map((b) => "<b>" + esc(b) + "</b>").join(" · ");
+  }
+  function boxHint(s) {
+    const n = boxItems(texts[s.key] || "").length;
+    return n ? `<b>${n} item${n === 1 ? "" : "s"}</b> · Tap to replace. Say "next" between items.` : `Tap here to add your own. Use the mic on your keyboard to talk.`;
+  }
+  function renderBoxes() {
+    const secs = pickedSecs();
+    if (!secs.length) {
+      el.boxes.innerHTML = `<div class="empty-state">No sections yet. Go to <b>Setup</b> and pick your sections.</div>`;
+      return;
+    }
+    el.boxes.innerHTML = secs.map((s) => `
+      <div class="grp box-grp" style="--c:${s.sc}">
+        <div class="grp-head"><label class="grp-title" for="bx-${esc(s.key)}">${esc(s.name)}</label></div>
+        <p class="box-hint" data-hint="${esc(s.key)}">${boxHint(s)}</p>
+        <textarea class="box" id="bx-${esc(s.key)}" data-key="${esc(s.key)}" rows="3" autocapitalize="sentences" enterkeyhint="done"
+          placeholder="${esc(s.ex.join(" Next. "))}">${esc(texts[s.key] || "")}</textarea>
+      </div>`).join("");
+    el.boxes.querySelectorAll("textarea.box").forEach(grow);
+  }
+  function renderPreview() {
+    const real = hasAnyText();
+    const model = passdownModel(!real);
+    el.preview.innerHTML = screenPassdown(model, {
+      note: real ? "" : "Showing an example. Add your own notes above and this becomes your passdown.",
+      emptyMsg: pickedSecs().length ? "All sections are empty and hidden (Omit empty is on)." : "Pick sections in Setup first."
+    });
+  }
+  function renderHeader() {
+    $("#hdrSummary").innerHTML = headerSummary();
+    const n = pickedSecs().reduce((a, s) => a + boxItems(texts[s.key] || "").length, 0);
+    const t = $("#tabCount"); t.hidden = !n; t.textContent = n;
+  }
+  function renderAll() { renderChips(); renderTemplate(); renderBoxes(); renderPreview(); renderHeader(); }
+  function grow(ta) {
+    ta.style.height = "auto";
+    let h = ta.scrollHeight;
+    if (!ta.value && ta.placeholder) { ta.value = ta.placeholder; h = ta.scrollHeight; ta.value = ""; } // size empty boxes to the sample text
+    ta.style.height = Math.max(96, h + 2) + "px";
+  }
+
+  function showTab(id) {
+    document.querySelectorAll(".view").forEach((v) => v.classList.toggle("on", v.id === id));
+    document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === id));
+    if (id === "vReview") el.boxes.querySelectorAll("textarea.box").forEach(grow); // size boxes once visible
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("resize", () => el.boxes.querySelectorAll("textarea.box").forEach(grow));
+  document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+  document.querySelectorAll("[data-goto]").forEach((b) => (b.onclick = () => showTab(b.dataset.goto)));
+
+  // ---------- Setup interactions ----------
+  el.chips.addEventListener("click", (e) => {
+    const rm = e.target.closest("[data-rmcustom]");
+    if (rm) {
+      const k = rm.dataset.rmcustom;
+      setup.customs = setup.customs.filter((n) => keyOf(n) !== k);
+      setup.picked = setup.picked.filter((x) => x !== k);
+      saveSetup(); renderAll(); return;
+    }
+    const b = e.target.closest(".chip"); if (!b) return;
+    const k = b.dataset.key;
+    setup.picked = setup.picked.includes(k) ? setup.picked.filter((x) => x !== k) : setup.picked.concat(k);
+    saveSetup(); renderAll();
+  });
+  function addCustom() {
+    const n = el.customName.value.replace(/\s+/g, " ").trim().slice(0, 40);
+    if (!n) { el.customName.focus(); return; }
+    const k = keyOf(n);
+    if (!allOptions().some((o) => o.key === k)) setup.customs.push(n);
+    if (!setup.picked.includes(k)) setup.picked.push(k);
+    el.customName.value = ""; saveSetup(); renderAll(); toast("Added " + n);
+  }
+  $("#btnAddCustom").onclick = addCustom;
+  el.customName.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } });
+
+  [["name", el.name], ["title", el.title], ["shift", el.shift]].forEach(([k, inp]) =>
+    inp.addEventListener("input", () => { setup[k] = inp.value.trim(); saveSetup(); renderTemplate(); renderPreview(); renderHeader(); }));
+  el.date.addEventListener("change", () => { setup.date = el.date.value; setup.dateSetOn = todayISO(); saveSetup(); renderTemplate(); renderPreview(); renderHeader(); });
+  [el.omitEmpty, el.omitEmpty2].forEach((c) => c.addEventListener("change", () => {
+    setup.omitEmpty = c.checked; el.omitEmpty.checked = el.omitEmpty2.checked = c.checked; saveSetup(); renderPreview();
+  }));
+
+  $("#btnSaveSetup").onclick = () => {
+    if (!setup.picked.length) { toast("Pick at least one section"); return; }
+    sampleMode = false; setup.saved = true; saveSetup();
+    if (/sample/.test(location.hash)) { try { history.replaceState(null, "", location.pathname + location.search); } catch (_) {} }
+    renderAll(); showTab("vReview"); toast("Setup saved on this phone");
+  };
+
+  // ---------- Review interactions ----------
+  // Tap a box: sample text is only a placeholder, so it clears. Your own text gets fully selected so talking/typing replaces it.
+  function selectAll(ta) { try { ta.setSelectionRange(0, ta.value.length); } catch (_) { try { ta.select(); } catch (__) {} } }
+  el.boxes.addEventListener("focusin", (e) => {
+    const ta = e.target.closest && e.target.closest("textarea.box"); if (!ta) return;
+    const s = pickedSecs().find((x) => x.key === ta.dataset.key);
+    if (s && ta.value.trim() && ta.value.trim() === s.ex.join(" Next. ")) { ta.value = ""; texts[s.key] = ""; } // stray sample text -> clear
+    if (!ta.value) return;
+    ta._justFocused = true;
+    selectAll(ta);
+    setTimeout(() => selectAll(ta), 0);      // iOS Safari places the caret after focus; re-select
+    setTimeout(() => selectAll(ta), 80);
+    setTimeout(() => { ta._justFocused = false; }, 450);
+  });
+  // stop the tap's mouseup from collapsing the selection right after focus (classic iOS fix)
+  el.boxes.addEventListener("mouseup", (e) => {
+    const ta = e.target.closest && e.target.closest("textarea.box");
+    if (ta && ta._justFocused && ta.value) { e.preventDefault(); selectAll(ta); }
+  });
+  el.boxes.addEventListener("input", (e) => {
+    const ta = e.target.closest("textarea.box"); if (!ta) return;
+    texts[ta.dataset.key] = ta.value; grow(ta);
+    const s = pickedSecs().find((x) => x.key === ta.dataset.key);
+    const hint = el.boxes.querySelector(`[data-hint="${CSS.escape(ta.dataset.key)}"]`);
+    if (hint && s) hint.innerHTML = boxHint(s);
+    clearTimeout(el.boxes._t); el.boxes._t = setTimeout(saveWork, 300);
+    clearTimeout(el.preview._t); el.preview._t = setTimeout(() => { renderPreview(); renderHeader(); }, 150);
+  });
+  el.boxes.addEventListener("focusout", (e) => { if (e.target.matches && e.target.matches("textarea.box")) grow(e.target); saveWork(); renderPreview(); renderHeader(); });
+
+  // ---------- Clipboard ----------
+  function execCopyHTML(html) {
+    const div = document.createElement("div");
+    div.className = "copysrc"; div.contentEditable = "true"; div.innerHTML = html;
+    document.body.appendChild(div);
+    const r = document.createRange(); r.selectNodeContents(div);
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    let ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
+    sel.removeAllRanges(); div.remove(); return ok;
+  }
+  function execCopyText(txt) {
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "0"; ta.style.opacity = "0"; ta.style.fontSize = "16px";
+    document.body.appendChild(ta); ta.focus(); ta.setSelectionRange(0, txt.length);
+    let ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
+    ta.remove(); return ok;
+  }
+  // returns "rich" | "plain" | ""
+  async function copyRich(html, txt) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem && window.isSecureContext) {
+        const item = new ClipboardItem({ "text/html": new Blob([html], { type: "text/html" }), "text/plain": new Blob([txt], { type: "text/plain" }) });
+        await navigator.clipboard.write([item]);
+        return "rich";
+      }
+    } catch (_) {}
+    if (execCopyHTML(html)) return "rich";
+    try { if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) { await navigator.clipboard.writeText(txt); return "plain"; } } catch (_) {}
+    return execCopyText(txt) ? "plain" : "";
+  }
+  async function copyPlain(txt) {
+    try { if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) { await navigator.clipboard.writeText(txt); return true; } } catch (_) {}
+    return execCopyText(txt);
+  }
+
+  $("#btnCopy").onclick = async () => {
+    if (!pickedSecs().length) { toast("Pick sections in Setup first"); return; }
+    if (!hasAnyText()) { toast("Add your notes in the boxes first"); return; }
+    const r = await copyRich(asHTML(), asText());
+    toast(r === "rich" ? "Copied with colors. Paste into email, Notes, or chat" : r === "plain" ? "Copied as plain text. Paste anywhere" : "Copy blocked. Try Share instead");
+  };
+  $("#btnShare").onclick = async () => {
+    if (!hasAnyText()) { toast("Add your notes in the boxes first"); return; }
+    const txt = asText();
+    if (navigator.share) {
+      try { await navigator.share({ title: "Shift Passdown", text: txt }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    toast((await copyPlain(txt)) ? "Sharing isn't available here. Copied instead" : "Sharing isn't available here");
+  };
+  $("#btnClearAll").onclick = () => {
+    if (!hasAnyText()) { toast("Nothing to clear"); return; }
+    if (!confirm("Clear everything you typed in all boxes? Your setup stays.")) return;
+    texts = {}; saveWork(); renderBoxes(); renderPreview(); renderHeader(); toast("Cleared");
+  };
+
+  // ---------- Share / back up setup ----------
   function exportText() {
-    return ["# Handoff Bot setup. Stored only on your device. Paste into Setup > Import.",
-      "manager: " + (setup.manager || ""),
+    return ["# Shift Handoff Bot setup. Open Handoff Bot > Setup > Share or back up > paste this in.",
+      "name: " + (setup.name || ""),
+      "title: " + (setup.title || ""),
       "shift: " + (setup.shift || ""),
-      "empty_text: " + (setup.emptyText || "No issues"),
+      "empty_text: " + (setup.emptyText || EMPTY_TEXT_DEFAULT),
       "omit_empty: " + (setup.omitEmpty ? "yes" : "no"),
-      "[sections]",
-      setup.sectionsText.trim()].join("\n") + "\n";
+      "[sections]"].concat(pickedSecs().map((s) => s.name)).join("\n") + "\n";
   }
   function importText(txt) {
     txt = String(txt || "").replace(/\r/g, "");
     if (!txt.trim()) return false;
     const lines = txt.split("\n");
     const si = lines.findIndex((l) => l.trim().toLowerCase() === "[sections]");
-    let secLines = lines;
-    if (si >= 0) {
-      lines.slice(0, si).forEach((l) => {
-        const m = l.match(/^\s*(manager|shift|empty_text|omit_empty)\s*:\s*(.*)$/i);
-        if (!m) return;
-        const k = m[1].toLowerCase(), v = m[2].trim();
-        if (k === "manager") setup.manager = v;
-        else if (k === "shift") setup.shift = v;
-        else if (k === "empty_text") setup.emptyText = v || "No issues";
-        else if (k === "omit_empty") setup.omitEmpty = /^(y|yes|true|1|on)$/i.test(v);
-      });
-      secLines = lines.slice(si + 1);
-    }
-    const secs = secLines.filter((l) => l.trim() && !/^\s*#/.test(l)).join("\n");
-    if (!parseSections(secs).length) return false;
-    setup.sectionsText = secs;
-    applySetup();
+    const head = si >= 0 ? lines.slice(0, si) : [];
+    const secLines = (si >= 0 ? lines.slice(si + 1) : lines).map((l) => l.trim()).filter((l) => l && l[0] !== "#");
+    // accept v2 lines like "Safety: safety, hazard | keywords" (name before the colon)
+    const names = [];
+    secLines.forEach((l) => { const n = l.split(":")[0].replace(/\s+/g, " ").trim().slice(0, 40); if (n && !names.some((x) => keyOf(x) === keyOf(n))) names.push(n); });
+    if (!names.length) return false;
+    head.forEach((l) => {
+      const m = l.match(/^\s*(name|manager|title|shift|empty_text|omit_empty)\s*:\s*(.*)$/i); if (!m) return;
+      const k = m[1].toLowerCase(), v = m[2].trim().slice(0, 60);
+      if (k === "name" || k === "manager") setup.name = v;
+      else if (k === "title") setup.title = v;
+      else if (k === "shift") setup.shift = v;
+      else if (k === "empty_text") setup.emptyText = v || EMPTY_TEXT_DEFAULT;
+      else if (k === "omit_empty") setup.omitEmpty = /^(y|yes|true|1|on)$/i.test(v);
+    });
+    const presetKeys = new Set(PRESETS.map((p) => keyOf(p.name)));
+    names.forEach((n) => { const k = keyOf(n); if (!presetKeys.has(k) && !setup.customs.some((c) => keyOf(c) === k)) setup.customs.push(n); });
+    setup.picked = names.map(keyOf);
+    sampleMode = false; setup.saved = true; saveSetup(); fillSetupForm(); renderAll();
     return true;
   }
-  function applySetup() {
-    SECS = compileSections(setup.sectionsText);
-    const keys = new Set(SECS.map((s) => s.key));
-    items.forEach((i) => { if (!keys.has(i.sec)) i.sec = UNSORTED; });
-    saveSetup(); saveWork(); fillSetupForm(); renderAll();
-  }
-
-  // ---------- Output ----------
-  function asText() {
-    const lines = [
-      "Date: " + fmtDate(el.date.value),
-      "Manager: " + (setup.manager || ""),
-      "Shift: " + (setup.shift || "")
-    ];
-    const omit = !!setup.omitEmpty, emptyTxt = setup.emptyText || "No issues";
-    SECS.forEach((s) => {
-      const list = items.filter((i) => i.sec === s.key);
-      if (!list.length && omit) return;
-      lines.push("", s.name);
-      if (!list.length) lines.push("- " + emptyTxt);
-      list.forEach((i) => lines.push("- " + i.text));
-    });
-    const other = items.filter((i) => !secByKey(i.sec));
-    if (other.length) { lines.push("", "Other"); other.forEach((i) => lines.push("- " + i.text)); }
-    return lines.join("\n");
-  }
-
-  function headerSummary() {
-    const parts = [fmtDate(el.date.value) || "No date", setup.manager ? esc(setup.manager) : "<i>No name set</i>", setup.shift ? esc(setup.shift) + " shift" : "<i>No shift</i>"];
-    return parts.map((p) => "<b>" + p + "</b>").join(" · ");
-  }
-
-  let splitting = null;
-  function renderReview() {
-    if (!items.length) {
-      el.review.innerHTML = `<div class="empty-state">No items yet. Dictate or paste notes on the <b>Notes</b> tab, then tap <b>Sort into sections</b>.</div>`;
-      return;
-    }
-    const groups = [];
-    const uns = items.filter((i) => !secByKey(i.sec));
-    if (uns.length) groups.push({ key: UNSORTED, name: "Needs a section", color: "var(--amber)", list: uns, unsorted: true });
-    SECS.forEach((s) => groups.push({ key: s.key, name: s.name, color: s.color, list: items.filter((i) => i.sec === s.key) }));
-    el.review.innerHTML = groups.map((g) => `
-      <div class="grp${g.unsorted ? " unsorted" : ""}" style="--c:${g.color}" data-grp="${esc(g.key)}">
-        <div class="grp-head"><span class="grp-title">${esc(g.name)}</span><span class="cnt">${g.list.length}</span></div>
-        ${g.list.map((i) => `
-          <div class="item" data-id="${i.id}">
-            <div class="item-top">
-              <button type="button" class="secbtn" data-move="${i.id}" title="Move to another section">${esc(g.name)} ▾</button>
-              <span class="txt" contenteditable="true" spellcheck="false" data-edit="${i.id}">${esc(i.text)}</span>
-            </div>
-            ${splitting === i.id ? `<div class="splitbox"><p>Tap the word where the new item should start:</p>${
-              i.text.split(/\s+/).map((w, n) => `<button type="button" class="w" data-splitat="${n}" data-sid="${i.id}">${esc(w)}</button>`).join("")
-            }<div class="row" style="margin-top:.4rem"><button type="button" class="btn-ghost" data-splitcancel="1">Cancel split</button></div></div>` : `
-            <div class="acts">
-              <button type="button" data-split="${i.id}">✂ Split</button>
-              <button type="button" class="del" data-rm="${i.id}">🗑 Delete</button>
-            </div>`}
-          </div>`).join("") || (g.unsorted ? "" : `<div class="empty">${esc(setup.emptyText || "No issues")}</div>`)}
-        ${g.unsorted ? "" : `<button type="button" class="add" data-add="${esc(g.key)}">+ Add item</button>`}
-      </div>`).join("");
-  }
-  function renderPreview() { el.preview.textContent = asText(); }
-  function renderAll() {
-    $("#hdrSummary").innerHTML = headerSummary();
-    $("#hdrSummary2").innerHTML = headerSummary();
-    const n = $("#tabCount");
-    n.hidden = !items.length; n.textContent = items.length;
-    renderReview(); renderPreview();
-  }
-
-  function showTab(id) {
-    document.querySelectorAll(".view").forEach((v) => v.classList.toggle("on", v.id === id));
-    document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === id));
-    window.scrollTo(0, 0);
-  }
-  document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
-  document.querySelectorAll("[data-goto]").forEach((b) => (b.onclick = () => showTab(b.dataset.goto)));
-
-  // ---------- Review interactions ----------
-  const findItem = (id) => items.find((i) => i.id === id);
-  let moving = null;
-  function openMove(id) {
-    const it = findItem(id); if (!it) return;
-    moving = id;
-    el.sheetOpts.innerHTML = SECS.map((s) => `<button type="button" style="--c:${s.color}" class="${s.key === it.sec ? "cur" : ""}" data-to="${esc(s.key)}">${esc(s.name)}</button>`).join("");
-    el.sheet.classList.add("on");
-  }
-  function closeMove() { el.sheet.classList.remove("on"); moving = null; }
-  el.sheetOpts.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-to]"); if (!b || !moving) return;
-    const it = findItem(moving);
-    if (it) { it.sec = b.dataset.to; saveWork(); renderAll(); toast("Moved to " + secName(it.sec)); }
-    closeMove();
-  });
-  $("#sheetCancel").onclick = closeMove;
-  el.sheet.addEventListener("click", (e) => { if (e.target === el.sheet) closeMove(); });
-
-  el.review.addEventListener("click", (e) => {
-    const t = e.target.closest("button"); if (!t) return;
-    const d = t.dataset;
-    if (d.move) openMove(d.move);
-    else if (d.rm) { items = items.filter((i) => i.id !== d.rm); saveWork(); renderAll(); toast("Deleted"); }
-    else if (d.split) { splitting = d.split; renderReview(); }
-    else if (d.splitcancel) { splitting = null; renderReview(); }
-    else if (d.splitat) {
-      const it = findItem(d.sid), n = +d.splitat;
-      if (it && n > 0) {
-        const words = it.text.split(/\s+/);
-        const a = clean(words.slice(0, n).join(" ")), b = clean(words.slice(n).join(" "));
-        if (a && b) {
-          it.text = a;
-          items.splice(items.indexOf(it) + 1, 0, { id: nid(), sec: it.sec, text: b });
-          toast("Split into 2 items");
-        }
-      }
-      splitting = null; saveWork(); renderAll();
-    } else if (d.add) {
-      const it = { id: nid(), sec: d.add, text: "" };
-      items.push(it); renderReview();
-      const span = el.review.querySelector(`[data-edit="${it.id}"]`); if (span) span.focus();
-    }
-  });
-  el.review.addEventListener("focusout", (e) => {
-    const t = e.target;
-    if (!t.dataset || !t.dataset.edit) return;
-    const it = findItem(t.dataset.edit); if (!it) return;
-    const v = t.textContent.replace(/\s+/g, " ").trim();
-    if (!v) { items = items.filter((i) => i !== it); saveWork(); renderAll(); return; }
-    if (v !== it.text) { it.text = v; saveWork(); renderAll(); }
-  });
-  el.review.addEventListener("keydown", (e) => {
-    if (e.target.dataset && e.target.dataset.edit && e.key === "Enter") { e.preventDefault(); e.target.blur(); }
-  });
-
-  // ---------- Clipboard ----------
-  async function copyText(txt) {
-    try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(txt); return true; } } catch (_) {}
-    const ta = document.createElement("textarea");
-    ta.value = txt; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
-    document.body.appendChild(ta); ta.select();
-    let ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
-    ta.remove(); return ok;
-  }
-
-  // ---------- Actions ----------
-  function build() {
-    const raw = el.raw.value;
-    if (!raw.trim()) { toast("Type or paste some notes first"); el.raw.focus(); return; }
-    const r = parse(raw);
-    items = r.items;
-    if (r.shift && !setup.shift) { setup.shift = r.shift; saveSetup(); fillSetupForm(); }
-    saveWork(); renderAll(); showTab("vReview");
-    toast(`Sorted ${items.length} item${items.length === 1 ? "" : "s"}${r.usedMarkers ? " using your section markers" : ""}. Review, then copy.`);
-  }
-  $("#btnBuild").onclick = build;
-  $("#btnSample").onclick = () => { el.raw.value = SAMPLE; build(); };
-  $("#btnSampleM").onclick = () => { el.raw.value = SAMPLE_MARKERS; build(); };
-  $("#btnClear").onclick = () => {
-    if ((el.raw.value.trim() || items.length) && !confirm("Clear notes and pass-down?")) return;
-    el.raw.value = ""; items = []; saveWork(); renderAll(); el.raw.focus();
+  $("#btnShareSetup").onclick = async () => {
+    if (!setup.picked.length) { toast("Pick some sections first"); return; }
+    const txt = exportText();
+    try {
+      const f = new File([txt], "handoff-bot-setup.txt", { type: "text/plain" });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "Handoff Bot setup", text: "My Handoff Bot setup. Open Handoff Bot > Setup > Share or back up, then open this file." }); return; }
+      if (navigator.share) { await navigator.share({ title: "Handoff Bot setup", text: txt }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    el.ioText.value = txt;
+    toast((await copyPlain(txt)) ? "Setup code copied. Paste it in a text or email" : "Setup code is in the box below. Copy it manually");
   };
-  $("#btnCopy").onclick = async () => {
-    if (!items.length) { toast("Sort some notes first"); return; }
-    toast((await copyText(asText())) ? "Copied. Paste into chat, email, or log" : "Copy blocked. Select the preview and copy manually");
+  $("#btnCopySetup").onclick = async () => {
+    if (!setup.picked.length) { toast("Pick some sections first"); return; }
+    const txt = exportText(); el.ioText.value = txt;
+    toast((await copyPlain(txt)) ? "Setup code copied" : "Setup code is in the box below. Copy it manually");
   };
-  $("#btnPrint").onclick = () => { if (!items.length) { toast("Sort some notes first"); return; } window.print(); };
-  el.raw.addEventListener("input", () => { clearTimeout(el.raw._t); el.raw._t = setTimeout(saveWork, 400); });
-
-  // header fields save instantly
-  el.manager.addEventListener("input", () => { setup.manager = el.manager.value.trim(); saveSetup(); renderAll(); });
-  el.shift.addEventListener("input", () => { setup.shift = el.shift.value.trim(); saveSetup(); renderAll(); });
-  el.date.addEventListener("change", renderAll);
-  el.emptyText.addEventListener("input", () => { setup.emptyText = el.emptyText.value; saveSetup(); renderAll(); });
-  [el.omitEmpty, el.omitEmpty2].forEach((c) => c.addEventListener("change", () => {
-    setup.omitEmpty = c.checked; el.omitEmpty.checked = el.omitEmpty2.checked = c.checked; saveSetup(); renderAll();
-  }));
-
-  $("#btnSaveSetup").onclick = () => {
-    const v = el.secText.value;
-    if (/^\s*\[sections\]\s*$/im.test(v)) { if (importText(v)) toast("Setup imported and saved on this device"); return; }
-    if (!parseSections(v).length) { toast("Add at least one section"); return; }
-    setup.sectionsText = v.trim();
-    setup.manager = el.manager.value.trim(); setup.shift = el.shift.value.trim();
-    setup.emptyText = el.emptyText.value.trim() || "No issues";
-    applySetup();
-    toast(`Saved ${SECS.length} sections on this device`);
-  };
-  $("#btnResetSetup").onclick = () => {
-    if (!confirm("Replace your sections with the generic defaults? (Export first if you want a copy.)")) return;
-    setup.sectionsText = DEFAULT_SECTIONS; applySetup(); toast("Generic sections restored");
-  };
-  $("#btnExport").onclick = () => { el.ioText.value = exportText(); toast("Setup text below. Copy or download it"); };
-  $("#btnExportCopy").onclick = async () => { el.ioText.value = exportText(); toast((await copyText(el.ioText.value)) ? "Setup copied" : "Copy blocked. Select the text manually"); };
-  $("#btnExportFile").onclick = () => {
+  $("#btnDownloadSetup").onclick = () => {
+    if (!setup.picked.length) { toast("Pick some sections first"); return; }
     const url = URL.createObjectURL(new Blob([exportText()], { type: "text/plain" }));
     const a = document.createElement("a"); a.href = url; a.download = "handoff-bot-setup.txt";
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
   };
-  $("#btnImport").onclick = () => { toast(importText(el.ioText.value) ? `Imported ${SECS.length} sections` : "Nothing to import. Paste setup text first"); };
+  $("#btnImport").onclick = () => { toast(importText(el.ioText.value) ? `Setup loaded: ${setup.picked.length} sections` : "Nothing to use. Paste a setup first"); };
   $("#ioFile").addEventListener("change", (e) => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
+    if (f.size > 20000) { toast("That file is too big to be a setup"); e.target.value = ""; return; }
     const r = new FileReader();
-    r.onload = () => { el.ioText.value = r.result; toast(importText(r.result) ? `Imported ${SECS.length} sections` : "Couldn't read that file"); };
+    r.onload = () => { el.ioText.value = r.result; toast(importText(r.result) ? `Setup loaded: ${setup.picked.length} sections` : "Couldn't read that file"); };
     r.readAsText(f); e.target.value = "";
   });
 
-  // "How to dictate" box: open on first use, remembers if you collapse it
-  const howto = $("#howto");
-  try { if (localStorage.getItem("handoffbot.howto") === "closed") howto.open = false; } catch (_) {}
-  howto.addEventListener("toggle", () => { try { localStorage.setItem("handoffbot.howto", howto.open ? "open" : "closed"); } catch (_) {} });
+  // in-app browsers (X, LinkedIn, Facebook, Instagram) can forget localStorage
+  if (/\b(FBAN|FBAV|Instagram|LinkedInApp|Twitter|TwitterAndroid)\b/i.test(navigator.userAgent || "")) $("#inapp").hidden = false;
 
-  // expose for testing / console tinkering
-  window.HandoffBot = { parse, clean, hardChunks, detectMarker, guess, asText, exportText, importText, get items() { return items; }, get sections() { return SECS; } };
+  window.HandoffBot = { clean, hardChunks, boxItems, asText, asHTML, exportText, importText, copyRich,
+    get setup() { return setup; }, get texts() { return texts; }, get sections() { return pickedSecs(); } };
 
   // ---------- Boot ----------
   loadAll();
-  el.date.value = todayISO();
+  if (/[#&?]sample\b/.test(location.hash + location.search)) {
+    sampleMode = true; // show the recommended 8 with example text; your saved setup is untouched until you tap Save
+    setup = { ...setup, picked: PRESETS.map((p) => keyOf(p.name)) };
+  }
   fillSetupForm();
   renderAll();
-  if (items.length && /[#&?]review\b/.test(location.hash + location.search)) showTab("vReview");
-  if (/[#&?]sample\b/.test(location.hash + location.search)) $("#btnSample").click();
+  if (!sampleMode && setup.saved && setup.picked.length && /[#&?]review\b/.test(location.hash + location.search)) showTab("vReview");
+  else showTab("vSetup");
 })();
 </script>
 </body>
