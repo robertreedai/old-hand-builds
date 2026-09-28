@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Handoff"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="icon-192.png">
+<head><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Passdown"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="icon-192.png">
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="theme-color" content="#0f1419" />
-<title>Shift Handoff Bot</title>
+<title>Old Hand Passdown</title>
 <style>
   :root {
     --bg: #0f1419; --bg-elev: #161e28; --bg-soft: #202b39; --ink: #e8eef6; --muted: #8b9bb0;
@@ -153,7 +153,7 @@
     <div class="brand">
       <div class="logo" aria-hidden="true">HB</div>
       <div>
-        <h1>Shift Handoff Bot</h1>
+        <h1>Old Hand Passdown</h1>
         <p class="tagline">Talk or type your shift notes → clean pass-down</p>
       </div>
     </div>
@@ -250,10 +250,10 @@
     No AI, no server of its own · Notes stay in this browser · Always review before handing off · Safety notes are not incident or OSHA records
     <details class="about" id="aboutBox">
       <summary>About &amp; terms</summary>
-      <p><b>Privacy.</b> Handoff Bot has no accounts, no AI, no analytics, and no server of its own. What you type or dictate is saved only in this browser on this device, and the app does not upload it. Your phone's dictation or keyboard may use its own speech service. Copying or sharing sends your text wherever you choose. Our host, GitHub Pages, logs visitor IP addresses.</p>
-      <p><b>Accuracy.</b> Handoff Bot only puts your words into the sections you choose. It does not check facts, catch mistakes, or understand what you mean. Dictation can mishear you, and "next" can split items in the wrong place. Read the whole passdown and fix it before you hand it off.</p>
+      <p><b>Privacy.</b> Old Hand Passdown has no accounts, no AI, no analytics, and no server of its own. What you type or dictate is saved only in this browser on this device, and the app does not upload it. Your phone's dictation or keyboard may use its own speech service. Copying or sharing sends your text wherever you choose. Our host, GitHub Pages, logs visitor IP addresses.</p>
+      <p><b>Accuracy.</b> Old Hand Passdown only puts your words into the sections you choose. It does not check facts, catch mistakes, or understand what you mean. Dictation can mishear you, and "next" can split items in the wrong place. Read the whole passdown and fix it before you hand it off.</p>
       <p><b>Safety section.</b> The Safety section is just a shift note. It is not an incident report, OSHA record, or compliance record. It does not replace your employer's required safety reporting, lockout/tagout procedures, or recordkeeping. Report hazards, injuries, and near misses right away through your employer's official channels. In an emergency, call for help first.</p>
-      <p><b>Terms.</b> Handoff Bot is free and provided "as is," with no warranties of any kind. To the extent the law allows, Old Hand AI is not liable for any loss from using it. You are responsible for what you enter and share, including your employer's confidential information, and for following your employer's rules on devices and notes. We may change or discontinue the app at any time.</p>
+      <p><b>Terms.</b> Old Hand Passdown is free and provided "as is," with no warranties of any kind. To the extent the law allows, Old Hand AI is not liable for any loss from using it. You are responsible for what you enter and share, including your employer's confidential information, and for following your employer's rules on devices and notes. We may change or discontinue the app at any time.</p>
       <p><i>These notes are general information, not legal advice. If you need legal advice, talk to your own lawyer.</i></p>
     </details>
   </footer>
@@ -656,7 +656,7 @@
 
   // ---------- Share / back up setup ----------
   function exportText() {
-    return ["# Shift Handoff Bot setup. Open Handoff Bot > Setup > Share or back up > paste this in.",
+    return ["# Old Hand Passdown setup. Open Old Hand Passdown > Setup > Share or back up > paste this in.",
       "name: " + (setup.name || ""),
       "title: " + (setup.title || ""),
       "shift: " + (setup.shift || ""),
@@ -695,8 +695,8 @@
     const txt = exportText();
     try {
       const f = new File([txt], "handoff-bot-setup.txt", { type: "text/plain" });
-      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "Handoff Bot setup", text: "My Handoff Bot setup. Open Handoff Bot > Setup > Share or back up, then open this file." }); return; }
-      if (navigator.share) { await navigator.share({ title: "Handoff Bot setup", text: txt }); return; }
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "Old Hand Passdown setup", text: "My Old Hand Passdown setup. Open Old Hand Passdown > Setup > Share or back up, then open this file." }); return; }
+      if (navigator.share) { await navigator.share({ title: "Old Hand Passdown setup", text: txt }); return; }
     } catch (e) { if (e && e.name === "AbortError") return; }
     el.ioText.value = txt;
     toast((await copyPlain(txt)) ? "Setup code copied. Paste it in a text or email" : "Setup code is in the box below. Copy it manually");
