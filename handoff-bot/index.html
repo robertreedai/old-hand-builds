@@ -142,7 +142,7 @@
     <ul>
       <li>Free tool, as-is. Always review your passdown before handing it off.</li>
       <li>The Safety section is a shift note, not an incident report or OSHA record. Report hazards through your employer.</li>
-      <li>Your notes stay on this phone. Nothing is uploaded.</li>
+      <li>Your notes stay in this browser on this device. The app uploads nothing.</li>
     </ul>
     <button type="button" id="gateOk">Got it</button>
     <button type="button" class="terms" id="gateTerms">Full terms</button>
@@ -151,10 +151,10 @@
 <div class="shell">
   <header class="app-head">
     <div class="brand">
-      <div class="logo" aria-hidden="true">HB</div>
+      <div class="logo" aria-hidden="true">OH</div>
       <div>
         <h1>Old Hand Passdown</h1>
-        <p class="tagline">Talk or type your shift notes → clean pass-down</p>
+        <p class="tagline">Talk or type your shift notes → clean passdown</p>
       </div>
     </div>
   </header>
@@ -173,7 +173,7 @@
       <ol>
         <li>Pick your sections below, then tap <b>Save setup</b>.</li>
         <li>On Review, tap each box and talk (tap the <b>mic on your keyboard</b>) or type. Say <b>"next"</b> between items.</li>
-        <li>Copy or share the finished pass-down.</li>
+        <li>Copy or share the finished passdown.</li>
       </ol>
     </div>
 
@@ -694,7 +694,7 @@
     if (!setup.picked.length) { toast("Pick some sections first"); return; }
     const txt = exportText();
     try {
-      const f = new File([txt], "handoff-bot-setup.txt", { type: "text/plain" });
+      const f = new File([txt], "old-hand-passdown-setup.txt", { type: "text/plain" });
       if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: "Old Hand Passdown setup", text: "My Old Hand Passdown setup. Open Old Hand Passdown > Setup > Share or back up, then open this file." }); return; }
       if (navigator.share) { await navigator.share({ title: "Old Hand Passdown setup", text: txt }); return; }
     } catch (e) { if (e && e.name === "AbortError") return; }
@@ -709,7 +709,7 @@
   $("#btnDownloadSetup").onclick = () => {
     if (!setup.picked.length) { toast("Pick some sections first"); return; }
     const url = URL.createObjectURL(new Blob([exportText()], { type: "text/plain" }));
-    const a = document.createElement("a"); a.href = url; a.download = "handoff-bot-setup.txt";
+    const a = document.createElement("a"); a.href = url; a.download = "old-hand-passdown-setup.txt";
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
   };
   $("#btnImport").onclick = () => { toast(importText(el.ioText.value) ? `Setup loaded: ${setup.picked.length} sections` : "Nothing to use. Paste a setup first"); };
