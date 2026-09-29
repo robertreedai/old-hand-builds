@@ -186,7 +186,7 @@
         <div><label class="f" for="date">Date</label><input type="date" id="date" /></div>
       </div>
       <datalist id="shiftList"><option value="Day"><option value="Night"><option value="Swing"><option value="1st"><option value="2nd"><option value="3rd"></datalist>
-      <p class="hint">All optional. Remembered on this phone only.</p>
+      <p class="hint">All optional. Remembered on this device only.</p>
     </div>
 
     <div class="card">
@@ -565,7 +565,7 @@
     if (!setup.picked.length) { toast("Pick at least one section"); return; }
     sampleMode = false; setup.saved = true; saveSetup();
     if (/sample/.test(location.hash)) { try { history.replaceState(null, "", location.pathname + location.search); } catch (_) {} }
-    renderAll(); showTab("vReview"); toast("Setup saved on this phone");
+    renderAll(); showTab("vReview"); toast("Setup saved on this device");
   };
 
   // ---------- Review interactions ----------
