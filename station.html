@@ -384,6 +384,8 @@ html,body{margin:0;height:100%;background:#02040a;color:var(--tx);font-family:va
 .sr:focus-within{position:fixed;left:8px;bottom:8px;width:auto;height:auto;clip:auto;z-index:90;background:#07101f;border:1px solid var(--cy);padding:8px;max-height:50vh;overflow:auto;white-space:normal}
 .sr button{display:block;margin:2px 0;background:none;border:0;color:var(--tx);font:13px var(--font);text-align:left;cursor:pointer}
 .hud{position:fixed;left:0;right:0;top:0;z-index:10;padding:calc(10px + var(--st)) 12px 0;pointer-events:none;background:linear-gradient(180deg,rgba(2,4,10,.82),rgba(2,4,10,.35) 70%,transparent)}
+.draft-note{margin:0 0 10px;padding:7px 10px;border:1px solid rgba(255,181,71,.45);border-left:3px solid var(--am);background:rgba(6,14,28,.72);color:var(--tx);font:500 11.5px/1.4 var(--font);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
+.draft-note b{font:800 9px/1 var(--mono);letter-spacing:.14em;color:var(--am);margin-right:6px;text-transform:uppercase}
 .hud-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .logo{font:800 11.5px/1 var(--mono);letter-spacing:.16em;white-space:nowrap;color:var(--tx);display:flex;align-items:center;gap:8px;text-shadow:0 0 12px rgba(94,231,255,.5)}
 .logo i{width:7px;height:7px;border-radius:50%;background:var(--gr);box-shadow:0 0 10px var(--gr);animation:bl 2.4s infinite}
@@ -481,6 +483,7 @@ body.jumping .warp{opacity:1;transform:scale(2.4)}
 <div class="hud">
   <div class="hud-row"><div class="logo"><i></i>STATION OPS <span>·</span> OLD HAND AI</div><div class="stamp" id="stamp"></div></div>
   <nav class="ctrs" id="ctrs" aria-label="Counters"></nav>
+  <p class="draft-note" role="note"><b>Loose first draft.</b>This is a surface-level view of some of the bots I use, not every bot or every detail. It'll fill in as I go.</p>
 </div>
 <div class="hint" id="hint">TAP ANYTHING · DRAG · PINCH</div>
 <button class="recenter" id="recenter" aria-label="Recenter camera" title="Recenter">⌖</button>
